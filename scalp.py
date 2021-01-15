@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from binance.client import Client
 from binance.enums import *
 import time
+from colors import colors
 
 # Percent of portfolio to trade
 IN_PLAY_PERCENT = 1
@@ -12,6 +13,10 @@ IN_PLAY_PERCENT = 1
 SYMBOL = "BTCUSDT"
 DEBUG = True
 SCALP_PERCENT = 1
+
+# CONST EVAL
+IN_PLAY_PERCENT = 100 / IN_PLAY_PERCENT
+SCALP_PERCENT = 100 / SCALP_PERCENT
 
 
 def writeOrder(order: dict) -> None:
@@ -23,24 +28,41 @@ load_dotenv()
 api_key = os.getenv("KEY")
 api_secret = os.getenv("SECRET")
 client = Client(api_key, api_secret, tld="us")
-api_key = api_secret = ""
+api_key = api_secret = None
 
 USDTBalance = (client.get_asset_balance(asset="USDT"))["free"]
-USDTBalance = float(USDTBalance) * (IN_PLAY_PERCENT / 100)
+USDTBalance = float(USDTBalance) * IN_PLAY_PERCENT
 
 print("Available balance is: " + str(USDTBalance))
 
 while True:
     averagePrice = float(client.get_avg_price(symbol=SYMBOL)["price"])
     print("Average price is: " + str(averagePrice))
-    toBuy = averagePrice / USDTBalance
+    toBuyQuantity = USDTBalance / averagePrice
     # order = client.order_limit_buy(
-    #     symbol='BNBBTC',
-    #     quantity=100,
+    #     symbol=SYMBOL,
+    #     quantity=toBuyQuantity,
     #     price='0.00001')
-    buyOrder = {"orderId": 1, "clientOrderId": "abc"}
+    buyOrder = {
+        "orderId": 1,
+        "clientOrderId": "abc",
+        "price": averagePrice,
+        "status": "not-filled",
+    }
     buyOrderId = buyOrder["orderId"]
     buyClientOrderId = buyOrder["clientOrderId"]
+    print(
+        colors.PLACED
+        + "PLACED:"
+        + colors.BUY
+        + " BUY"
+        + colors.END
+        + (" (test)" if DEBUG else "")
+        + ": order PLACED at "
+        + str(buyOrder["price"])
+        + " totaling "
+        + str(toBuyQuantity)
+    )
     while not buyOrder["status"] == "filled":
         print("\tAwaiting order fill")
         time.sleep(1)
@@ -50,25 +72,45 @@ while True:
         #     origClientOrderId=buyClientOrderId,
         # )
         buyOrder["status"] = "filled"
+        buyOrder["executedQty"] = toBuyQuantity
+
+    filledBuyOrderPrice = float(buyOrder["price"])
+    filledBuyOrderQuantity = float(buyOrder["executedQty"])
     print(
-        "BUY"
+        colors.FILLED
+        + "FILLED: "
+        + colors.BUY
+        + "BUY"
+        + colors.END
         + (" (test)" if DEBUG else "")
-        + ": order at "
-        + str(buyOrder["price"])
+        + ": @ "
+        + str(filledBuyOrderPrice)
         + " totaling "
-        + str(toBuy)
+        + str(filledBuyOrderQuantity)
     )
     writeOrder(buyOrder)
 
-    sellLimit = price * (100 / SCALP_PERCENT)
-    print("Sell limit is " + str(SCALP_PERCENT) + "% higher at " + str(sellLimit))
+    sellPrice = filledBuyOrderPrice * SCALP_PERCENT
     print(
-        "SELL LIMIT"
+        colors.BOLD
+        + "Sell limit: "
+        + colors.END
+        + str(SCALP_PERCENT / 100)
+        + "% higher at "
+        + str(sellPrice)
+    )
+    print(
+        colors.PLACED
+        + "PLACED "
+        + colors.SELL
+        + "SELL"
+        + colors.END
+        + " LIMIT"
         + (" (test)" if DEBUG else "")
         + ": order at "
-        + str(price)
-        + " totaling "
-        + str(toBuy)
+        + str(sellPrice)
+        # + " totaling "
+        # + str(toBuy)
     )
     # order = client.get_order(
     #     symbol=SYMBOL,
