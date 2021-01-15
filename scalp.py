@@ -15,14 +15,32 @@ DEBUG = True
 SCALP_PERCENT = 1
 
 # CONST EVAL
-IN_PLAY_PERCENT = 100 / IN_PLAY_PERCENT
-SCALP_PERCENT = 100 / SCALP_PERCENT
+IN_PLAY_PERCENT = IN_PLAY_PERCENT / 100
+SCALP_PERCENT = SCALP_PERCENT / 100
 
 
 def writeOrder(order: dict) -> None:
     with open("orders.json", "a") as f:
         f.write(json.dumps(order))
 
+
+def waitForOrder(buyOrderId: int, buyClientOrderId: str) -> dict:
+    # buyOrder = client.get_order(
+    #     symbol=SYMBOL,
+    #     orderId=buyOrderId,
+    #     origClientOrderId=buyClientOrderId,
+    # )
+    while not buyOrder["status"] == "filled":
+        print(colors.INFO + "\tAwaiting order fill..." + colors.END)
+        time.sleep(1)
+        # buyOrder = client.get_order(
+        #     symbol=SYMBOL,
+        #     orderId=buyOrderId,
+        #     origClientOrderId=buyClientOrderId,
+        # )
+        buyOrder["status"] = "filled"
+        buyOrder["executedQty"] = toBuyQuantity
+    return buyOrder
 
 load_dotenv()
 api_key = os.getenv("KEY")
@@ -63,16 +81,7 @@ while True:
         + " totaling "
         + str(toBuyQuantity)
     )
-    while not buyOrder["status"] == "filled":
-        print("\tAwaiting order fill")
-        time.sleep(1)
-        # buyOrder = client.get_order(
-        #     symbol=SYMBOL,
-        #     orderId=buyOrderId,
-        #     origClientOrderId=buyClientOrderId,
-        # )
-        buyOrder["status"] = "filled"
-        buyOrder["executedQty"] = toBuyQuantity
+    waitForOrder()
 
     filledBuyOrderPrice = float(buyOrder["price"])
     filledBuyOrderQuantity = float(buyOrder["executedQty"])
@@ -95,7 +104,7 @@ while True:
         colors.BOLD
         + "Sell limit: "
         + colors.END
-        + str(SCALP_PERCENT / 100)
+        + str(SCALP_PERCENT * 100)
         + "% higher at "
         + str(sellPrice)
     )
@@ -103,9 +112,9 @@ while True:
         colors.PLACED
         + "PLACED "
         + colors.SELL
-        + "SELL"
+        + "SELL "
         + colors.END
-        + " LIMIT"
+        + "LIMIT"
         + (" (test)" if DEBUG else "")
         + ": order at "
         + str(sellPrice)
