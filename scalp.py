@@ -14,6 +14,11 @@ DEBUG = True
 SCALP_PERCENT = 1
 
 
+def writeOrder(order: dict) -> None:
+    with open("orders.json", "a") as f:
+        f.write(json.dumps(order))
+
+
 load_dotenv()
 api_key = os.getenv("KEY")
 api_secret = os.getenv("SECRET")
@@ -34,8 +39,8 @@ while True:
     #     quantity=100,
     #     price='0.00001')
     buyOrder = {"orderId": 1, "clientOrderId": "abc"}
-    buyOrderId = buyOrder['orderId']
-    buyClientOrderId = buyOrder['clientOrderId']
+    buyOrderId = buyOrder["orderId"]
+    buyClientOrderId = buyOrder["clientOrderId"]
     while not buyOrder["status"] == "filled":
         print("\tAwaiting order fill")
         time.sleep(1)
@@ -44,17 +49,16 @@ while True:
         #     orderId=buyOrderId,
         #     origClientOrderId=buyClientOrderId,
         # )
-        buyOrder['status'] = 'filled'
+        buyOrder["status"] = "filled"
     print(
         "BUY"
         + (" (test)" if DEBUG else "")
         + ": order at "
-        + str(buyOrder['price'])
+        + str(buyOrder["price"])
         + " totaling "
         + str(toBuy)
     )
-    with open("orders.json", "a") as f:
-        f.write(buyOrder)
+    writeOrder(buyOrder)
 
     sellLimit = price * (100 / SCALP_PERCENT)
     print("Sell limit is " + str(SCALP_PERCENT) + "% higher at " + str(sellLimit))
