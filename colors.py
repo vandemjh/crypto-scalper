@@ -1,4 +1,5 @@
 from settings import DEBUG
+from binance.enums import SIDE_BUY, SIDE_SELL
 
 # Adapted from Blender source code
 class colors:
@@ -14,6 +15,11 @@ class colors:
     BOLD = INFO = "\033[1m"
     UNDERLINE = "\033[4m"
     END = "\033[0m"
+    def warn(input: str) -> str:
+        return colors.WARNING + input + colors.END
+    def info(input: str) -> str:
+        return colors.INFO + input + colors.END
+
 
 class phrases:
     PLACED = colors.PLACED + "PLACED " + colors.END
@@ -22,4 +28,11 @@ class phrases:
     SELL = colors.SELL + "SELL " + colors.END
     ERROR = colors.ERROR + "ERROR " + colors.END
     WARNING = colors.WARNING + "WARNING " + colors.END
-    DEBUG = "(test) " if DEBUG else ""
+    def debug() -> str:
+        return (colors.WARNING + "(test)" + colors.END) if DEBUG else ""
+
+    def buyOrSell(side: SIDE_BUY or SIDE_SELL) -> str:
+        return (phrases.BUY if side == SIDE_BUY else phrases.SELL) + phrases.debug()
+
+    def filledOrPlaced(filled: bool):
+        return phrases.FILLED if filled else phrases.PLACED

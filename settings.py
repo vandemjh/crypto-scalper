@@ -4,5 +4,5 @@ IN_PLAY_PERCENT = 1
 SYMBOL = "BTCUSDT"
 DEBUG = True
 SCALP_PERCENT = 1
-# Export trades to file
-OUTPUT_FILE = "output/orders.json"
+# Export trades to file in json
+OUTPUT_FILE = "output/orders"

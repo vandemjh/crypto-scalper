@@ -1,7 +1,7 @@
 from logging import debug
 import time
 from binance.client import Client
-from binance.enums import *
+from binance.enums import SIDE_BUY, SIDE_SELL
 from colors import colors, phrases
 from settings import DEBUG
 
@@ -26,15 +26,9 @@ class order:
 
     def __str__(self) -> str:
         return (
-            ((colors.WARNING + "(test) ") if DEBUG else "")
-            + (
-                (colors.FILLED + "FILLED: ")
-                if self.filled
-                else (colors.PLACED + "PLACED: ")
-            )
-            + ((colors.BUY + "BUY: ") if self.side == SIDE_BUY else "")
-            + ((colors.SELL + "SELL: ") if self.side == SIDE_SELL else "")
-            + colors.END
+            phrases.debug()
+            + phrases.filledOrPlaced(self.filled)
+            + phrases.buyOrSell(self.side)
             + "@ "
             + str(self.price)
             + " totaling "
@@ -49,9 +43,13 @@ class order:
         self.filled = True
         self.price = price
         self.quantity = quantity
+        self.printStatus()
 
     def waitForOrder(self) -> dict:
-        # order = client.get_order(
+        """
+        Waits for the order to fill, returns filled order dict
+        """
+        # getOrder = client.get_order(
         #     symbol=SYMBOL,
         #     orderId=self.orderId,
         #     origClientOrderId=self.clientOrderId,
@@ -85,11 +83,12 @@ class order:
             # quantity=toBuyQuantity,
             # price='0.00001')
             pass
+        self.printStatus()
+
+    def printStatus(self) -> None:
         print(
-            phrases.PLACED
-            + (phrases.BUY if self.side == SIDE_BUY else "")
-            + (phrases.SELL if self.side == SIDE_SELL else "")
-            + phrases.DEBUG
+            phrases.filledOrPlaced(self.filled)
+            + phrases.buyOrSell(self.side)
             + ": order @ "
             + str(self.price)
             + " totaling "
