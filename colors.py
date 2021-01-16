@@ -1,3 +1,5 @@
+from settings import DEBUG
+
 # Adapted from Blender source code
 class colors:
     RED = ERROR = "\u001b[31m"
@@ -12,3 +14,12 @@ class colors:
     BOLD = INFO = "\033[1m"
     UNDERLINE = "\033[4m"
     END = "\033[0m"
+
+class phrases:
+    PLACED = colors.PLACED + "PLACED " + colors.END
+    FILLED = colors.FILLED + "FILLED " + colors.END
+    BUY = colors.BUY + "BUY " + colors.END
+    SELL = colors.SELL + "SELL " + colors.END
+    ERROR = colors.ERROR + "ERROR " + colors.END
+    WARNING = colors.WARNING + "WARNING " + colors.END
+    DEBUG = "(test) " if DEBUG else ""
