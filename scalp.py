@@ -36,17 +36,11 @@ def writeOrder(order: dict) -> None:
     with open(OUTPUT_FILE, "w+") as f:
         f.write(json.dumps(ORDER_HISTORY))
 
-
-def getLatestOrder() -> float:
-    return float(client.get_recent_trades(symbol=SYMBOL, limit=1)[0]["price"])
-
-
 try:
     print(colors.info("Press Ctrl+C to stop"))
     while True:
-        latestTrade = getLatestOrder()
-        print(colors.info("Latest sale is: ") + str(latestTrade))
-        buyPrice = latestTrade
+        latestTradePrice = Order.getLatestOrderPrice()
+        buyPrice = latestTradePrice - (latestTradePrice * (SCALP_PERCENT / 100))
         buyQuantity = balance / buyPrice
 
         # Place and wait for buy order
@@ -55,12 +49,12 @@ try:
         writeOrder(buyOrder.waitForOrder())
 
         # Place and wait for sell order
-        sellPrice = buyPrice * SCALP_PERCENT
-        sellQuantity = buyQuantity
+        sellPrice = buyPrice - (buyPrice * (SCALP_PERCENT / 100))
+        sellQuantity = (client.get_asset_balance(asset="BTC"))["free"]
         sellOrder = Order(SYMBOL, SIDE_SELL, sellPrice, sellQuantity)
         sellOrder.place()
         writeOrder(sellOrder.waitForOrder())
 except KeyboardInterrupt:
-    print(colors.warn("Interrupted!") + " you should probably close open orders:")
+    print(colors.warn("\nInterrupted!") + " you should probably close open orders:")
     Order.printOpenOrders(SYMBOL)
     pass

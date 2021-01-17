@@ -1,5 +1,6 @@
 import json
-from settings import SYMBOL
+from os import stat
+from settings import SCALP_PERCENT, SYMBOL
 import time
 from binance.client import Client
 from binance.enums import SIDE_BUY, SIDE_SELL
@@ -62,16 +63,36 @@ class Order:
         #     orderId=self.orderId,
         #     origClientOrderId=self.clientOrderId,
         # )
-        getOrder = {"price": 123, "quantity": 123}
+        getOrder = Order.getLatestOrder()
+        # oldPrice = float(getOrder["price"])
+        # newPrice = (oldPrice * (SCALP_PERCENT / 100)) + oldPrice
+        # print(
+        #     colors.warn(
+        #         "\t\tHoping to scalp: %"
+        #         + str(SCALP_PERCENT)
+        #         + " @ $"
+        #         + str(newPrice)
+        #     )
+        # )
+        # while float(getOrder["price"]) < newPrice:
+        #     time.sleep(5)
+        #     getOrder = Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
+        #     print(
+        #         colors.warn("Current price: ")
+        #         + getOrder["price"]
+        #         + " %"
+        #         + str(((newPrice / float(getOrder["price"])) - 1) * 100) + " off"
+        #     )
         while not self.filled:
-            print(colors.INFO + "\tAwaiting order fill..." + colors.END)
-            time.sleep(1)
-            # order = client.get_order(
+            print(colors.info("\tAwaiting order fill..."))
+            time.sleep(5)
+            print(colors.info("\t\t" + "Current price: " + str(Order.getLatestOrderPrice())))
+            # getOrder = client.get_order(
             #     symbol=SYMBOL,
             #     orderId=buyOrderId,
             #     origClientOrderId=buyClientOrderId,
             # )
-            self.fill(getOrder["price"], getOrder["quantity"])
+            self.fill(getOrder["price"], getOrder["qty"])
 
         return getOrder
 
@@ -101,7 +122,7 @@ class Order:
         """
         Returns open orders
         """
-        return list(json.loads(str(Order.client.get_open_orders(symbol=symbol))))
+        return list(Order.client.get_open_orders(symbol=symbol))
 
     @staticmethod
     def printOpenOrders(symbol: str) -> None:
@@ -114,3 +135,10 @@ class Order:
             return
         for o in openOrders:
             print(o)
+
+    @staticmethod
+    def getLatestOrderPrice() -> float:
+        return float(Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]["price"])
+    @staticmethod
+    def getLatestOrder() -> dict:
+        return Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
