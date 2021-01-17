@@ -29,7 +29,7 @@ class phrases:
     ERROR = colors.ERROR + "ERROR " + colors.END
     WARNING = colors.WARNING + "WARNING " + colors.END
     def debug() -> str:
-        return (colors.WARNING + "(test)" + colors.END) if DEBUG else ""
+        return (colors.WARNING + "(test) " + colors.END) if DEBUG else ""
 
     def buyOrSell(side: SIDE_BUY or SIDE_SELL) -> str:
         return (phrases.BUY if side == SIDE_BUY else phrases.SELL) + phrases.debug()

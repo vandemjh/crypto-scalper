@@ -1,7 +1,6 @@
 from io import StringIO
 import json
-from logging import DEBUG
-from settings import SYMBOL
+from settings import DEBUG, SYMBOL
 import time
 from binance.client import Client
 from binance.enums import SIDE_BUY, SIDE_SELL
@@ -42,8 +41,10 @@ class Order:
         side: SIDE_BUY or SIDE_SELL,
         price: float = 0,
         quantity: float = 0,
+        basePrecision: int = 8,
+        quotePrecision: int = 8,
     ) -> None:
-        self.orderId: str = ""
+        self.orderId: int = ""
         self.clientOrderId: str = ""
         self.filled: bool = False
 
@@ -52,12 +53,14 @@ class Order:
         self.side = side
         self.price = price
         self.quantity = quantity
+        self.basePrecision = basePrecision
+        self.quotePrecision = quotePrecision
 
     def __str__(self) -> str:
         return (
             phrases.filledOrPlaced(self.filled)
             + phrases.buyOrSell(self.side)
-            + " @ "
+            + "@ "
             + str(self.price)
             + " totaling "
             + str(self.quantity)
@@ -75,78 +78,45 @@ class Order:
 
     def waitForOrder(self) -> dict:
         """
-        Waits for the order to fill, returns filled order json
+        Waits for the order to fill, returns filled order dict
         """
-        # getOrder = client.get_order(
-        #     symbol=SYMBOL,
-        #     orderId=self.orderId,
-        #     origClientOrderId=self.clientOrderId,
-        # )
-        getOrder = Order.getLatestOrder()
-
-        # oldPrice = float(getOrder["price"])
-        # newPrice = (oldPrice * (SCALP_PERCENT / 100)) + oldPrice
-        # print(
-        #     colors.warn(
-        #         "\t\tHoping to scalp: %"
-        #         + str(SCALP_PERCENT)
-        #         + " @ $"
-        #         + str(newPrice)
-        #     )
-        # )
-        # while float(getOrder["price"]) < newPrice:
-        #     time.sleep(5)
-        #     getOrder = Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
-        #     print(
-        #         colors.warn("Current price: ")
-        #         + getOrder["price"]
-        #         + " %"
-        #         + str(((newPrice / float(getOrder["price"])) - 1) * 100) + " off"
-        #     )
-
-        # if not
-
-        time.sleep(5)
-
-        # while not self.filled:
-        #     print(colors.info("\tAwaiting order fill..."))
-        #     time.sleep(5)
-        #     print(
-        #         colors.info(
-        #             "\t\t" + "Current price: " + str(Order.getLatestOrderPrice())
-        #         )
-        #     )
-        #     if DEBUG:
-        #         self.fill(getOrder["price"], getOrder["qty"])
-        #     else:
-        #         getOrder = Order.client.get_order(
-        #             symbol=self.symbol,
-        #             orderId=self.orderId,
-        #             origClientOrderId=self.clientOrderId,
-        #         )
-        #         if getOrder["status"] == "filled":
-        #             pass
+        getOrder = Order.getAccountEvent()
+        while (
+            getOrder == None
+            or not "X" in getOrder
+            or not "i" in getOrder
+            or not getOrder["X"] == "FILLED"
+            or not int(getOrder["i"]) == self.orderId
+        ):
+            time.sleep(1)
+            getOrder = Order.getAccountEvent()
+        print(colors.info("Order filled"))
+        print(getOrder)
         return getOrder
 
     def place(self):
         """
         Place the order
         """
+        self.printStatus()
         if self.side == SIDE_BUY:
             if DEBUG:
                 pass
             else:
                 Order.client.order_limit_buy(
-                    symbol=self.symbol, quantity=self.quantity, price=self.price
+                    symbol=self.symbol,
+                    quantity=round(self.quantity, self.basePrecision),
+                    price=round(self.price, self.quotePrecision),
                 )
         elif self.side == SIDE_SELL:
             if DEBUG:
                 pass
             else:
                 Order.client.order_limit_sell(
-                    symbol=self.symbol, quantity=self.quantity, price=self.price
+                    symbol=self.symbol,
+                    quantity=round(self.quantity, self.basePrecision),
+                    price=round(self.price, self.quotePrecision),
                 )
-        self.printStatus()
 
     def printStatus(self) -> None:
         print(self)
@@ -188,9 +158,9 @@ class Order:
     def getLatestOrderPrice() -> float:
         if Order.latestPrice == None:
             while Order.latestPrice == None:
-                return float(Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0][
-                    "price"
-                ])
+                return float(
+                    Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]["price"]
+                )
         return Order.latestPrice
 
     @staticmethod
@@ -198,6 +168,11 @@ class Order:
         if Order.latestOrder == None:
             return Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
         return Order.latestOrder
+
+    @staticmethod
+    def getAccountEvent() -> dict:
+        return Order.accountEvent
+
     @staticmethod
     def stopSocket():
         """
