@@ -51,8 +51,8 @@ class Order:
         self.symbol = symbol
         self.symbol: str
         self.side = side
-        self.price = price
-        self.quantity = quantity
+        self.price = round(price, quotePrecision)
+        self.quantity = round(quantity, basePrecision)
         self.basePrecision = basePrecision
         self.quotePrecision = quotePrecision
 
@@ -99,14 +99,15 @@ class Order:
         Place the order
         """
         self.printStatus()
+        print("price is " + str(self.price))
         if self.side == SIDE_BUY:
             if DEBUG:
                 pass
             else:
                 Order.client.order_limit_buy(
                     symbol=self.symbol,
-                    quantity=round(self.quantity, self.basePrecision),
-                    price=round(self.price, self.quotePrecision),
+                    quantity=self.quantity,
+                    price=self.price,
                 )
         elif self.side == SIDE_SELL:
             if DEBUG:
@@ -114,8 +115,8 @@ class Order:
             else:
                 Order.client.order_limit_sell(
                     symbol=self.symbol,
-                    quantity=round(self.quantity, self.basePrecision),
-                    price=round(self.price, self.quotePrecision),
+                    quantity=self.quantity,
+                    price=self.price,
                 )
 
     def printStatus(self) -> None:

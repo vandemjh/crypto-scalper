@@ -36,13 +36,22 @@ baseAsset: str = None
 baseAssetPrecision: int = None
 quoteAsset: str = None
 quotePrecision: int = None
+filters: list = []
+minPrice: float = 0
+maxPrice: float = 0
 for symbol in symbols:
     if symbol["symbol"] == SYMBOL:
         baseAsset = symbol["baseAsset"]
         baseAssetPrecision = symbol["baseAssetPrecision"]
         quoteAsset = symbol["quoteAsset"]
         quotePrecision = symbol["quotePrecision"]
+        filters = symbol["filters"]
 
+
+for filter in filters:
+    if filter["filterType"] == "PRICE_FILTER":
+        minPrice = filter["minPrice"]
+        maxPrice = filter["maxPrice"]
 print(
     colors.warn("Exchange information")
     + colors.info("\n\tBase asset: ")
@@ -57,6 +66,10 @@ print(
     + colors.END
     + colors.info("\n\tQuote asset precision: ")
     + str(quotePrecision)
+    + colors.info("\n\tMinimum price: ")
+    + str(minPrice)
+    + colors.info("\n\tMaximum price: ")
+    + str(maxPrice)
 )
 
 
@@ -75,16 +88,26 @@ try:
 
         # Place and wait for buy order
         buyOrder = Order(
-            SYMBOL, SIDE_BUY, buyPrice, buyQuantity, baseAssetPrecision, quotePrecision
+            symbol=SYMBOL,
+            side=SIDE_BUY,
+            price=buyPrice,
+            quantity=buyQuantity,
+            basePrecision=baseAssetPrecision,
+            quotePrecision=quotePrecision,
         )
         buyOrder.place()
         writeOrder(buyOrder.waitForOrder())
 
         # Place and wait for sell order
         sellPrice = buyPrice - (buyPrice * (SCALP_PERCENT / 100))
-        sellQuantity = (client.get_asset_balance(asset=SELL_SYMBOL))["free"]
+        sellQuantity = (client.get_asset_balance(asset=baseAsset))["free"]
         sellOrder = Order(
-            SYMBOL, SIDE_SELL, sellPrice, sellQuantity, quotePrecision, quotePrecision
+            symbol=SYMBOL,
+            side=SIDE_SELL,
+            price=sellPrice,
+            quantity=sellQuantity,
+            basePrecision=quotePrecision,
+            quotePrecision=quotePrecision,
         )
         sellOrder.place()
         writeOrder(sellOrder.waitForOrder())
