@@ -43,6 +43,8 @@ class Order:
         quantity: float = 0,
         basePrecision: int = 8,
         quotePrecision: int = 8,
+        tickSize: float = 0,
+        stepSize: float = 0,
     ) -> None:
         self.orderId: int = ""
         self.clientOrderId: str = ""
@@ -51,10 +53,26 @@ class Order:
         self.symbol = symbol
         self.symbol: str
         self.side = side
-        self.price = round(price, quotePrecision)
-        self.quantity = round(quantity, basePrecision)
+        
+        # self.price = round(price, quotePrecision)
+        ticks = 0
+        temp = tickSize
+        while temp < 1:
+            temp = temp * 10
+            ticks = ticks + 1
+        self.price = round(price, ticks)
+
+        # self.quantity = round(quantity, basePrecision)
+        ticks = 0
+        temp = stepSize
+        while temp < 1:
+            temp = temp * 10
+            ticks = ticks + 1
+        self.quantity = round(quantity, ticks)
+
         self.basePrecision = basePrecision
         self.quotePrecision = quotePrecision
+        self.tickSize = tickSize
 
     def __str__(self) -> str:
         return (
@@ -99,7 +117,6 @@ class Order:
         Place the order
         """
         self.printStatus()
-        print("price is " + str(self.price))
         if self.side == SIDE_BUY:
             if DEBUG:
                 pass

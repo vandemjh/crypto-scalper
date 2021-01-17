@@ -39,6 +39,8 @@ quotePrecision: int = None
 filters: list = []
 minPrice: float = 0
 maxPrice: float = 0
+tickSize: float = 0
+stepSize: float = 0
 for symbol in symbols:
     if symbol["symbol"] == SYMBOL:
         baseAsset = symbol["baseAsset"]
@@ -47,11 +49,14 @@ for symbol in symbols:
         quotePrecision = symbol["quotePrecision"]
         filters = symbol["filters"]
 
-
 for filter in filters:
     if filter["filterType"] == "PRICE_FILTER":
-        minPrice = filter["minPrice"]
-        maxPrice = filter["maxPrice"]
+        minPrice = float(filter["minPrice"])
+        maxPrice = float(filter["maxPrice"])
+        tickSize = float(filter["tickSize"])
+    if filter["filterType"] == "LOT_SIZE":
+        stepSize = float(filter["stepSize"])
+
 print(
     colors.warn("Exchange information")
     + colors.info("\n\tBase asset: ")
@@ -70,6 +75,10 @@ print(
     + str(minPrice)
     + colors.info("\n\tMaximum price: ")
     + str(maxPrice)
+    + colors.info("\n\tTick size: ")
+    + str(tickSize)
+    + colors.info("\n\tStep size: ")
+    + str(stepSize)
 )
 
 
@@ -94,6 +103,8 @@ try:
             quantity=buyQuantity,
             basePrecision=baseAssetPrecision,
             quotePrecision=quotePrecision,
+            tickSize=tickSize,
+            stepSize=stepSize,
         )
         buyOrder.place()
         writeOrder(buyOrder.waitForOrder())
@@ -108,6 +119,8 @@ try:
             quantity=sellQuantity,
             basePrecision=quotePrecision,
             quotePrecision=quotePrecision,
+            tickSize=tickSize,
+            stepSize=stepSize,
         )
         sellOrder.place()
         writeOrder(sellOrder.waitForOrder())
