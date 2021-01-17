@@ -56,5 +56,6 @@ try:
         writeOrder(sellOrder.waitForOrder())
 except KeyboardInterrupt:
     print(colors.warn("\nInterrupted!") + " you should probably close open orders:")
+    Order.stopSocket()
     Order.printOpenOrders(SYMBOL)
     pass

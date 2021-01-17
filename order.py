@@ -1,22 +1,40 @@
+from io import StringIO
 import json
 from logging import DEBUG
-from os import stat
-from settings import SCALP_PERCENT, SYMBOL
+from settings import SYMBOL
 import time
 from binance.client import Client
 from binance.enums import SIDE_BUY, SIDE_SELL
 from colors import colors, phrases
+from binance.websockets import BinanceSocketManager
+from twisted.internet import reactor
 
 
 class Order:
     client: Client
+    socket: BinanceSocketManager
+
+    ticketSocketKey: str = None
+    latestPrice: float = None
+    latestOrder: dict = None
+    accountEvent: dict = None
 
     @staticmethod
     def setClient(client: Client):
         """
-        Sets static client for orders
+        Sets static client for orders, starts socket
         """
         Order.client = client
+        Order.socket = BinanceSocketManager(Order.client)
+        Order.ticketSocketKey = success = Order.socket.start_trade_socket(
+            SYMBOL, Order.processTradeSocket
+        )
+        Order.socket.start_user_socket(Order.processUserSocket)
+        Order.socket.start()
+
+        if not success:
+            print(colors.fail("FAILED") + " to open socket connection")
+            exit(1)
 
     def __init__(
         self,
@@ -65,6 +83,7 @@ class Order:
         #     origClientOrderId=self.clientOrderId,
         # )
         getOrder = Order.getLatestOrder()
+
         # oldPrice = float(getOrder["price"])
         # newPrice = (oldPrice * (SCALP_PERCENT / 100)) + oldPrice
         # print(
@@ -84,22 +103,29 @@ class Order:
         #         + " %"
         #         + str(((newPrice / float(getOrder["price"])) - 1) * 100) + " off"
         #     )
-        while not self.filled:
-            print(colors.info("\tAwaiting order fill..."))
-            time.sleep(5)
-            print(
-                colors.info(
-                    "\t\t" + "Current price: " + str(Order.getLatestOrderPrice())
-                )
-            )
-            if DEBUG:
-                self.fill(getOrder["price"], getOrder["qty"])
-            else:
-                getOrder = Order.client.get_order(
-                    symbol=self.symbol,
-                    orderId=self.orderId,
-                    origClientOrderId=self.clientOrderId,
-                )
+
+        # if not
+
+        time.sleep(5)
+
+        # while not self.filled:
+        #     print(colors.info("\tAwaiting order fill..."))
+        #     time.sleep(5)
+        #     print(
+        #         colors.info(
+        #             "\t\t" + "Current price: " + str(Order.getLatestOrderPrice())
+        #         )
+        #     )
+        #     if DEBUG:
+        #         self.fill(getOrder["price"], getOrder["qty"])
+        #     else:
+        #         getOrder = Order.client.get_order(
+        #             symbol=self.symbol,
+        #             orderId=self.orderId,
+        #             origClientOrderId=self.clientOrderId,
+        #         )
+        #         if getOrder["status"] == "filled":
+        #             pass
         return getOrder
 
     def place(self):
@@ -126,6 +152,20 @@ class Order:
         print(self)
 
     @staticmethod
+    def processTradeSocket(message: dict) -> None:
+        """
+        Processes socket message
+        """
+        Order.latestPrice = float(message["p"])
+
+    @staticmethod
+    def processUserSocket(message: dict) -> None:
+        """
+        Processes user socket event
+        """
+        Order.accountEvent = json.loads(message)
+
+    @staticmethod
     def getOpenOrders(symbol: str) -> list:
         """
         Returns open orders
@@ -146,8 +186,22 @@ class Order:
 
     @staticmethod
     def getLatestOrderPrice() -> float:
-        return float(Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]["price"])
+        if Order.latestPrice == None:
+            while Order.latestPrice == None:
+                return float(Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0][
+                    "price"
+                ])
+        return Order.latestPrice
 
     @staticmethod
     def getLatestOrder() -> dict:
-        return Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
+        if Order.latestOrder == None:
+            return Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
+        return Order.latestOrder
+    @staticmethod
+    def stopSocket():
+        """
+        Stops the socket and reactor
+        """
+        Order.socket.close()
+        reactor.stop()

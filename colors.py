@@ -19,7 +19,8 @@ class colors:
         return colors.WARNING + input + colors.END
     def info(input: str) -> str:
         return colors.INFO + input + colors.END
-
+    def fail(input: str) -> str:
+        return colors.FAIL + input + colors.END
 class phrases:
     PLACED = colors.PLACED + "PLACED " + colors.END
     FILLED = colors.FILLED + "FILLED " + colors.END
