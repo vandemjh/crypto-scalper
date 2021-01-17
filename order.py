@@ -1,35 +1,43 @@
-from logging import debug
+import json
+from settings import SYMBOL
 import time
 from binance.client import Client
 from binance.enums import SIDE_BUY, SIDE_SELL
 from colors import colors, phrases
-from settings import DEBUG
 
 
-class order:
-    symbol: str
-    side: SIDE_BUY or SIDE_SELL
-    price: float = 0
-    quantity: float = 0
+class Order:
+    client: Client
 
-    orderId: str
-    clientOrderId: str
-
-    filled: bool = False
+    @staticmethod
+    def setClient(client: Client):
+        """
+        Sets static client for orders
+        """
+        Order.client = client
 
     def __init__(
-        self, symbol: str, client: Client, side: str, price: int, quantity: int
+        self,
+        symbol: str,
+        side: SIDE_BUY or SIDE_SELL,
+        price: float = 0,
+        quantity: float = 0,
     ) -> None:
+        self.orderId: str = ""
+        self.clientOrderId: str = ""
+        self.filled: bool = False
+
+        self.symbol = symbol
+        self.symbol: str
         self.side = side
         self.price = price
         self.quantity = quantity
 
     def __str__(self) -> str:
         return (
-            phrases.debug()
-            + phrases.filledOrPlaced(self.filled)
+            phrases.filledOrPlaced(self.filled)
             + phrases.buyOrSell(self.side)
-            + "@ "
+            + " @ "
             + str(self.price)
             + " totaling "
             + str(self.quantity)
@@ -47,7 +55,7 @@ class order:
 
     def waitForOrder(self) -> dict:
         """
-        Waits for the order to fill, returns filled order dict
+        Waits for the order to fill, returns filled order json
         """
         # getOrder = client.get_order(
         #     symbol=SYMBOL,
@@ -86,11 +94,23 @@ class order:
         self.printStatus()
 
     def printStatus(self) -> None:
-        print(
-            phrases.filledOrPlaced(self.filled)
-            + phrases.buyOrSell(self.side)
-            + ": order @ "
-            + str(self.price)
-            + " totaling "
-            + str(self.quantity)
-        )
+        print(self)
+
+    @staticmethod
+    def getOpenOrders(symbol: str) -> list:
+        """
+        Returns open orders
+        """
+        return list(json.loads(str(Order.client.get_open_orders(symbol=symbol))))
+
+    @staticmethod
+    def printOpenOrders(symbol: str) -> None:
+        """
+        Prints open orders
+        """
+        openOrders = Order.getOpenOrders(symbol)
+        if len(openOrders) == 0:
+            print("No open orders")
+            return
+        for o in openOrders:
+            print(o)

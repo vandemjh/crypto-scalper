@@ -20,7 +20,6 @@ class colors:
     def info(input: str) -> str:
         return colors.INFO + input + colors.END
 
-
 class phrases:
     PLACED = colors.PLACED + "PLACED " + colors.END
     FILLED = colors.FILLED + "FILLED " + colors.END
