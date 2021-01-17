@@ -50,7 +50,7 @@ try:
 
         # Place and wait for sell order
         sellPrice = buyPrice - (buyPrice * (SCALP_PERCENT / 100))
-        sellQuantity = (client.get_asset_balance(asset="BTC"))["free"]
+        sellQuantity = (client.get_asset_balance(asset=SELL_SYMBOL))["free"]
         sellOrder = Order(SYMBOL, SIDE_SELL, sellPrice, sellQuantity)
         sellOrder.place()
         writeOrder(sellOrder.waitForOrder())

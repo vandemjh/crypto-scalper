@@ -1,4 +1,5 @@
 import json
+from logging import DEBUG
 from os import stat
 from settings import SCALP_PERCENT, SYMBOL
 import time
@@ -86,14 +87,19 @@ class Order:
         while not self.filled:
             print(colors.info("\tAwaiting order fill..."))
             time.sleep(5)
-            print(colors.info("\t\t" + "Current price: " + str(Order.getLatestOrderPrice())))
-            # getOrder = client.get_order(
-            #     symbol=SYMBOL,
-            #     orderId=buyOrderId,
-            #     origClientOrderId=buyClientOrderId,
-            # )
-            self.fill(getOrder["price"], getOrder["qty"])
-
+            print(
+                colors.info(
+                    "\t\t" + "Current price: " + str(Order.getLatestOrderPrice())
+                )
+            )
+            if DEBUG:
+                self.fill(getOrder["price"], getOrder["qty"])
+            else:
+                getOrder = Order.client.get_order(
+                    symbol=self.symbol,
+                    orderId=self.orderId,
+                    origClientOrderId=self.clientOrderId,
+                )
         return getOrder
 
     def place(self):
@@ -101,17 +107,19 @@ class Order:
         Place the order
         """
         if self.side == SIDE_BUY:
-            pass
-            # client.order_limit_buy(
-            # symbol=SYMBOL,
-            # quantity=toBuyQuantity,
-            # price='0.00001')
+            if DEBUG:
+                pass
+            else:
+                Order.client.order_limit_buy(
+                    symbol=self.symbol, quantity=self.quantity, price=self.price
+                )
         elif self.side == SIDE_SELL:
-            # client.order_limit_sell(
-            # symbol=SYMBOL,
-            # quantity=toBuyQuantity,
-            # price='0.00001')
-            pass
+            if DEBUG:
+                pass
+            else:
+                Order.client.order_limit_sell(
+                    symbol=self.symbol, quantity=self.quantity, price=self.price
+                )
         self.printStatus()
 
     def printStatus(self) -> None:
@@ -139,6 +147,7 @@ class Order:
     @staticmethod
     def getLatestOrderPrice() -> float:
         return float(Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]["price"])
+
     @staticmethod
     def getLatestOrder() -> dict:
         return Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
