@@ -111,8 +111,8 @@ try:
 
         # Place and wait for sell order
         latestTradePrice = Order.getLatestOrderPrice()
-        sellPrice = latestTradePrice - (latestTradePrice * (SCALP_PERCENT / 100))
-        sellQuantity = (client.get_asset_balance(asset=baseAsset))["free"]
+        sellPrice = latestTradePrice + (latestTradePrice * (SCALP_PERCENT / 100))
+        sellQuantity = Order.getAssetBalance(baseAsset)
         sellOrder = Order(
             symbol=SYMBOL,
             side=SIDE_SELL,
@@ -128,7 +128,7 @@ try:
         time.sleep(10)  # Avoid placing buy order right after
 except KeyboardInterrupt:
     print(colors.warn("\nInterrupted!"))
-    if (len(Order.getOpenOrders(SYMBOL)) != 0):
+    if len(Order.getOpenOrders(SYMBOL)) != 0:
         print("Canceling open orders:")
     else:
         print("No open orders")

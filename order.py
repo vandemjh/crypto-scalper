@@ -79,7 +79,8 @@ class Order:
 
     def __str__(self) -> str:
         return (
-            phrases.filledOrPlaced(self.filled)
+            "\n"  # Added newline
+            + phrases.filledOrPlaced(self.filled)
             + phrases.buyOrSell(self.side)
             + "@ "
             + str(self.price)
@@ -210,3 +211,7 @@ class Order:
         Cancel an order
         """
         Order.client.cancel_order(symbol=symbol, orderId=orderId)
+
+    @staticmethod
+    def getAssetBalance(asset: str) -> float:
+        return float(Order.client.get_asset_balance(asset=asset)["free"])
