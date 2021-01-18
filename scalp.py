@@ -1,4 +1,3 @@
-import requests
 import os
 import json
 from dotenv import load_dotenv
@@ -110,8 +109,7 @@ try:
         writeOrder(buyOrder.waitForOrder())
 
         # Place and wait for sell order
-        latestTradePrice = Order.getLatestOrderPrice()
-        sellPrice = latestTradePrice + (latestTradePrice * (SCALP_PERCENT / 100))
+        sellPrice = buyPrice + (buyPrice * (SCALP_PERCENT / 100))
         sellQuantity = Order.getAssetBalance(baseAsset)
         sellOrder = Order(
             symbol=SYMBOL,

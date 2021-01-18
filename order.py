@@ -215,3 +215,7 @@ class Order:
     @staticmethod
     def getAssetBalance(asset: str) -> float:
         return float(Order.client.get_asset_balance(asset=asset)["free"])
+
+    @staticmethod
+    def getAveragePrice(asset: str) -> float:
+        return float(Order.client.get_avg_price(symbol=asset))
