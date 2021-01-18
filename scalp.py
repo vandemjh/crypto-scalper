@@ -110,7 +110,8 @@ try:
         writeOrder(buyOrder.waitForOrder())
 
         # Place and wait for sell order
-        sellPrice = buyPrice - (buyPrice * (SCALP_PERCENT / 100))
+        latestTradePrice = Order.getLatestOrderPrice()
+        sellPrice = latestTradePrice - (latestTradePrice * (SCALP_PERCENT / 100))
         sellQuantity = (client.get_asset_balance(asset=baseAsset))["free"]
         sellOrder = Order(
             symbol=SYMBOL,
@@ -126,10 +127,14 @@ try:
         writeOrder(sellOrder.waitForOrder())
         time.sleep(10)  # Avoid placing buy order right after
 except KeyboardInterrupt:
-    print(colors.warn("\nInterrupted!") + " canceling open orders:")
-    Order.stopSocket()
-
+    print(colors.warn("\nInterrupted!"))
+    if (len(Order.getOpenOrders(SYMBOL)) != 0):
+        print("Canceling open orders:")
+    else:
+        print("No open orders")
     for order in Order.getOpenOrders(SYMBOL):
         print(order["orderId"])
         Order.cancelOrder(order["symbol"], order["orderId"])
     pass
+
+Order.stopSocket()

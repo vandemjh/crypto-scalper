@@ -1,8 +1,8 @@
 # Percent of portfolio to trade
-IN_PLAY_PERCENT = 10
+IN_PLAY_PERCENT = 5
 # Symbol to scalp
-SYMBOL = "LTCUSDT"
+SYMBOL = "BTCUSDT"
 DEBUG = False
-SCALP_PERCENT = 0.2
+SCALP_PERCENT = 0.3
 # Export trades to file in json
 OUTPUT_FILE = "output/orders"

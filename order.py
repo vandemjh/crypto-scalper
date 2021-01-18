@@ -114,8 +114,8 @@ class Order:
 
         time.sleep(1)
         getOrder = Order.client.get_order(symbol=self.symbol, orderId=self.orderId)
-        while getOrder["status"]:
-            time.sleep(1)
+        while not getOrder["status"] == "FILLED":
+            time.sleep(10)
             getOrder = Order.client.get_order(symbol=self.symbol, orderId=self.orderId)
         self.fill()
         return getOrder
