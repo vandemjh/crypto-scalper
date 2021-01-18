@@ -124,6 +124,7 @@ try:
         )
         sellOrder.place()
         writeOrder(sellOrder.waitForOrder())
+        time.sleep(10)  # Avoid placing buy order right after
 except KeyboardInterrupt:
     print(colors.warn("\nInterrupted!") + " you should probably close open orders:")
     Order.stopSocket()

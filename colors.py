@@ -15,12 +15,17 @@ class colors:
     BOLD = INFO = "\033[1m"
     UNDERLINE = "\033[4m"
     END = "\033[0m"
+
     def warn(input: str) -> str:
         return colors.WARNING + input + colors.END
+
     def info(input: str) -> str:
         return colors.INFO + input + colors.END
+
     def fail(input: str) -> str:
         return colors.FAIL + input + colors.END
+
+
 class phrases:
     PLACED = colors.PLACED + "PLACED " + colors.END
     FILLED = colors.FILLED + "FILLED " + colors.END
@@ -28,6 +33,7 @@ class phrases:
     SELL = colors.SELL + "SELL " + colors.END
     ERROR = colors.ERROR + "ERROR " + colors.END
     WARNING = colors.WARNING + "WARNING " + colors.END
+
     def debug() -> str:
         return (colors.WARNING + "(test) " + colors.END) if DEBUG else ""
 

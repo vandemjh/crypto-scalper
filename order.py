@@ -1,5 +1,6 @@
 from io import StringIO
 import json
+import sys
 from settings import DEBUG, SYMBOL
 import time
 from binance.client import Client
@@ -14,6 +15,8 @@ class Order:
     socket: BinanceSocketManager
 
     ticketSocketKey: str = None
+    userSocketKey: str = None
+
     latestPrice: float = None
     latestOrder: dict = None
     accountEvent: dict = None
@@ -25,13 +28,13 @@ class Order:
         """
         Order.client = client
         Order.socket = BinanceSocketManager(Order.client)
-        Order.ticketSocketKey = success = Order.socket.start_trade_socket(
+        Order.ticketSocketKey = Order.socket.start_trade_socket(
             SYMBOL, Order.processTradeSocket
         )
-        Order.socket.start_user_socket(Order.processUserSocket)
+        Order.userSocketKey = Order.socket.start_user_socket(Order.processUserSocket)
         Order.socket.start()
 
-        if not success:
+        if Order.ticketSocketKey == False or Order.userSocketKey == False:
             print(colors.fail("FAILED") + " to open socket connection")
             exit(1)
 
@@ -53,7 +56,7 @@ class Order:
         self.symbol = symbol
         self.symbol: str
         self.side = side
-        
+
         # self.price = round(price, quotePrecision)
         ticks = 0
         temp = tickSize
@@ -85,31 +88,36 @@ class Order:
             + "."
         )
 
-    def fill(self, price: float, quantity: float):
+    def fill(self):
         """
         Fill this order
         """
         self.filled = True
-        self.price = price
-        self.quantity = quantity
-        self.printStatus()
 
     def waitForOrder(self) -> dict:
         """
         Waits for the order to fill, returns filled order dict
         """
-        getOrder = Order.getAccountEvent()
-        while (
-            getOrder == None
-            or not "X" in getOrder
-            or not "i" in getOrder
-            or not getOrder["X"] == "FILLED"
-            or not int(getOrder["i"]) == self.orderId
-        ):
+        # getOrder = Order.getAccountEvent()
+        # while (
+        #     getOrder == None
+        #     or not "X" in getOrder
+        #     or not "i" in getOrder
+        #     or not getOrder["X"] == "FILLED"
+        #     or not int(getOrder["i"]) == self.orderId
+        # ):
+        #     time.sleep(1)
+        #     getOrder = Order.getAccountEvent()
+        # print(getOrder)
+        # self.fill()
+        # return getOrder
+
+        time.sleep(1)
+        getOrder = Order.client.get_order(symbol=self.symbol, orderId=self.orderId)
+        while getOrder["status"]:
             time.sleep(1)
-            getOrder = Order.getAccountEvent()
-        print(colors.info("Order filled"))
-        print(getOrder)
+            getOrder = Order.client.get_order(symbol=self.symbol, orderId=self.orderId)
+        self.fill()
         return getOrder
 
     def place(self):
@@ -121,20 +129,24 @@ class Order:
             if DEBUG:
                 pass
             else:
-                Order.client.order_limit_buy(
+                result = Order.client.order_limit_buy(
                     symbol=self.symbol,
                     quantity=self.quantity,
                     price=self.price,
                 )
+                self.orderId = result["orderId"]
+                self.clientOrderId = result["clientOrderId"]
         elif self.side == SIDE_SELL:
             if DEBUG:
                 pass
             else:
-                Order.client.order_limit_sell(
+                result = Order.client.order_limit_sell(
                     symbol=self.symbol,
                     quantity=self.quantity,
                     price=self.price,
                 )
+                self.orderId = result["orderId"]
+                self.clientOrderId = result["clientOrderId"]
 
     def printStatus(self) -> None:
         print(self)
@@ -144,6 +156,10 @@ class Order:
         """
         Processes socket message
         """
+        for i in range(len(str(message["p"]))):
+            sys.stdout.write("\b")
+        sys.stdout.write(str(message["p"]))
+        sys.stdout.flush()
         Order.latestPrice = float(message["p"])
 
     @staticmethod
@@ -151,6 +167,7 @@ class Order:
         """
         Processes user socket event
         """
+        print(message)
         Order.accountEvent = json.loads(message)
 
     @staticmethod
