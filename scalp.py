@@ -5,6 +5,7 @@ from binance.client import Client
 from binance.enums import *
 import time
 from colors import colors
+import traceback
 from order import Order
 from settings import *
 import datetime
@@ -95,6 +96,9 @@ try:
         buyQuantity = balance / buyPrice
 
         # Place and wait for buy order
+        cancelThreshold: float = latestTradePrice + (
+            latestTradePrice * (SCALP_PERCENT / 100)
+        )
         buyOrder = Order(
             symbol=SYMBOL,
             side=SIDE_BUY,
@@ -104,13 +108,20 @@ try:
             quotePrecision=quotePrecision,
             tickSize=tickSize,
             stepSize=stepSize,
+            cancelThreshold=cancelThreshold,
         )
         buyOrder.place()
-        writeOrder(buyOrder.waitForOrder())
+        print(colors.info("Cancel threshold: ") + str(cancelThreshold))
+        buyResult = buyOrder.waitForOrder()
+        if not buyResult:  # If order is cancelled, restart
+            continue
+        writeOrder(buyResult)
 
         # Place and wait for sell order
         sellPrice = buyPrice + (buyPrice * (SCALP_PERCENT / 100))
         sellQuantity = Order.getAssetBalance(baseAsset)
+        if sellQuantity == 0:
+            continue
         sellOrder = Order(
             symbol=SYMBOL,
             side=SIDE_SELL,
@@ -124,7 +135,7 @@ try:
         sellOrder.place()
         writeOrder(sellOrder.waitForOrder())
         time.sleep(10)  # Avoid placing buy order right after
-except KeyboardInterrupt:
+except Exception as e:
     print(colors.warn("\nInterrupted!"))
     if len(Order.getOpenOrders(SYMBOL)) != 0:
         print("Canceling open orders:")
@@ -133,6 +144,10 @@ except KeyboardInterrupt:
     for order in Order.getOpenOrders(SYMBOL):
         print(order["orderId"])
         Order.cancelOrder(order["symbol"], order["orderId"])
+
+    print(colors.warn("\nStack trace:"))
+    print(e)
+    traceback.print_exc()
     pass
 
 Order.stopSocket()

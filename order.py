@@ -1,6 +1,6 @@
-from io import StringIO
 import json
 import sys
+from typing import Callable
 from settings import DEBUG, SYMBOL
 import time
 from binance.client import Client
@@ -48,6 +48,8 @@ class Order:
         quotePrecision: int = 8,
         tickSize: float = 0,
         stepSize: float = 0,
+        cancelThreshold: float or None = None,
+        cancelled: bool = False,
     ) -> None:
         self.orderId: int = ""
         self.clientOrderId: str = ""
@@ -56,6 +58,7 @@ class Order:
         self.symbol = symbol
         self.symbol: str
         self.side = side
+        self.cancelThreshold = cancelThreshold
 
         # self.price = round(price, quotePrecision)
         ticks = 0
@@ -76,16 +79,19 @@ class Order:
         self.basePrecision = basePrecision
         self.quotePrecision = quotePrecision
         self.tickSize = tickSize
+        self.cancelled = cancelled
 
     def __str__(self) -> str:
         return (
             "\n"  # Added newline
+            + phrases.cancelled(self.cancelled)
             + phrases.filledOrPlaced(self.filled)
             + phrases.buyOrSell(self.side)
             + "@ "
             + str(self.price)
             + " totaling "
             + str(self.quantity)
+            + phrases.thresholdPricedOrNot(self.cancelThreshold)
             + "."
         )
 
@@ -95,9 +101,11 @@ class Order:
         """
         self.filled = True
 
-    def waitForOrder(self) -> dict:
+    def waitForOrder(self, callback: Callable or None = None) -> dict or False:
         """
         Waits for the order to fill, returns filled order dict
+        :param callback function cancels this order
+        :returns False if order is cancelled before being fully filled
         """
         # getOrder = Order.getAccountEvent()
         # while (
@@ -113,17 +121,28 @@ class Order:
         # self.fill()
         # return getOrder
 
-        time.sleep(1)
         getOrder = Order.client.get_order(symbol=self.symbol, orderId=self.orderId)
-        while not getOrder["status"] == "FILLED":
-            time.sleep(10)
-            getOrder = Order.client.get_order(symbol=self.symbol, orderId=self.orderId)
+        try:
+            while not getOrder["status"] == "FILLED":
+                if (not callback == None and callback()) or (
+                    not self.cancelThreshold == None
+                    and Order.getAveragePrice(self.symbol) > self.cancelThreshold
+                ):
+                    self.cancel()
+                    return False
+                time.sleep(10)
+                getOrder = Order.client.get_order(
+                    symbol=self.symbol, orderId=self.orderId
+                )
+        except:
+            raise
         self.fill()
         return getOrder
 
-    def place(self):
+    def place(self) -> dict or None:
         """
         Place the order
+        :returns api response or None if in debug mode
         """
         self.printStatus()
         if self.side == SIDE_BUY:
@@ -137,6 +156,7 @@ class Order:
                 )
                 self.orderId = result["orderId"]
                 self.clientOrderId = result["clientOrderId"]
+                return result
         elif self.side == SIDE_SELL:
             if DEBUG:
                 pass
@@ -148,6 +168,8 @@ class Order:
                 )
                 self.orderId = result["orderId"]
                 self.clientOrderId = result["clientOrderId"]
+                return result
+        return None
 
     def printStatus(self) -> None:
         print(self)
@@ -206,11 +228,20 @@ class Order:
         reactor.stop()
 
     @staticmethod
-    def cancelOrder(symbol: str, orderId: str):
+    def cancelOrder(symbol: str, orderId: str) -> dict:
         """
         Cancel an order
         """
-        Order.client.cancel_order(symbol=symbol, orderId=orderId)
+        return Order.client.cancel_order(symbol=symbol, orderId=orderId)
+
+    def cancel(self) -> dict:
+        """
+        Cancel this order
+        :returns api response
+        """
+        self.cancelled = True
+        self.printStatus()
+        return Order.cancelOrder(self.symbol, self.orderId)
 
     @staticmethod
     def getAssetBalance(asset: str) -> float:
@@ -218,4 +249,4 @@ class Order:
 
     @staticmethod
     def getAveragePrice(asset: str) -> float:
-        return float(Order.client.get_avg_price(symbol=asset))
+        return float(Order.client.get_avg_price(symbol=asset)["price"])

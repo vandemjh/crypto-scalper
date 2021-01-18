@@ -6,7 +6,7 @@ class colors:
     RED = ERROR = "\u001b[31m"
     GREEN = FILLED = "\u001b[32m"
     YELLOW = PLACED = "\u001b[33m"
-    BLUE = "\u001b[34m"
+    BLUE = THRESHOLD = "\u001b[34m"
     MAGENTA = SELL = "\u001b[35m"
     CYAN = BUY = "\u001b[36m"
     WHITE = "\u001b[37m"
@@ -33,6 +33,7 @@ class phrases:
     SELL = colors.SELL + "SELL " + colors.END
     ERROR = colors.ERROR + "ERROR " + colors.END
     WARNING = colors.WARNING + "WARNING " + colors.END
+    THRESHOLD = colors.THRESHOLD + "THRESHOLD " + colors.END
 
     def debug() -> str:
         return (colors.WARNING + "(test) " + colors.END) if DEBUG else ""
@@ -42,3 +43,7 @@ class phrases:
 
     def filledOrPlaced(filled: bool):
         return phrases.FILLED if filled else phrases.PLACED
+    def thresholdPricedOrNot(cancelThreshold: bool):
+        return phrases.THRESHOLD if not cancelThreshold == None else ""
+    def cancelled(cancelled: bool):
+        return colors.fail("CANCELLED ") if cancelled else ""
