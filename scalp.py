@@ -111,7 +111,6 @@ try:
             cancelThreshold=cancelThreshold,
         )
         buyOrder.place()
-        print(colors.info("Cancel threshold: ") + str(cancelThreshold))
         buyResult = buyOrder.waitForOrder()
         if not buyResult:  # If order is cancelled, restart
             continue

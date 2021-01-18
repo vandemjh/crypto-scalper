@@ -44,6 +44,6 @@ class phrases:
     def filledOrPlaced(filled: bool):
         return phrases.FILLED if filled else phrases.PLACED
     def thresholdPricedOrNot(cancelThreshold: bool):
-        return phrases.THRESHOLD if not cancelThreshold == None else ""
+        return phrases.THRESHOLD + str(cancelThreshold) if not cancelThreshold == None else ""
     def cancelled(cancelled: bool):
         return colors.fail("CANCELLED ") if cancelled else ""

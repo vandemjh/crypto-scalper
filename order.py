@@ -90,7 +90,7 @@ class Order:
             + "@ "
             + str(self.price)
             + " totaling "
-            + str(self.quantity)
+            + str(self.quantity) + " "
             + phrases.thresholdPricedOrNot(self.cancelThreshold)
             + "."
         )
