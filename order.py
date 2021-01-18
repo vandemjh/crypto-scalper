@@ -178,18 +178,6 @@ class Order:
         return list(Order.client.get_open_orders(symbol=symbol))
 
     @staticmethod
-    def printOpenOrders(symbol: str) -> None:
-        """
-        Prints open orders
-        """
-        openOrders = Order.getOpenOrders(symbol)
-        if len(openOrders) == 0:
-            print("No open orders")
-            return
-        for o in openOrders:
-            print(o)
-
-    @staticmethod
     def getLatestOrderPrice() -> float:
         if Order.latestPrice == None:
             while Order.latestPrice == None:
@@ -215,3 +203,10 @@ class Order:
         """
         Order.socket.close()
         reactor.stop()
+
+    @staticmethod
+    def cancelOrder(symbol: str, orderId: str):
+        """
+        Cancel an order
+        """
+        Order.client.cancel_order(symbol=symbol, orderId=orderId)

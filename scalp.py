@@ -126,7 +126,10 @@ try:
         writeOrder(sellOrder.waitForOrder())
         time.sleep(10)  # Avoid placing buy order right after
 except KeyboardInterrupt:
-    print(colors.warn("\nInterrupted!") + " you should probably close open orders:")
+    print(colors.warn("\nInterrupted!") + " canceling open orders:")
     Order.stopSocket()
-    Order.printOpenOrders(SYMBOL)
+
+    for order in Order.getOpenOrders(SYMBOL):
+        print(order["orderId"])
+        Order.cancelOrder(order["symbol"], order["orderId"])
     pass

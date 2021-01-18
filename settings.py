@@ -1,5 +1,5 @@
 # Percent of portfolio to trade
-IN_PLAY_PERCENT = 1
+IN_PLAY_PERCENT = 10
 # Symbol to scalp
 SYMBOL = "LTCUSDT"
 DEBUG = False
