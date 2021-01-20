@@ -1,43 +1,14 @@
-import json
-import sys
 from typing import Callable
-from settings import DEBUG, SYMBOL
+from client import Client
+
+from binance.exceptions import BinanceAPIException
+from settings import DEBUG
 import time
-from binance.client import Client
 from binance.enums import SIDE_BUY, SIDE_SELL
-from colors import colors, phrases
-from binance.websockets import BinanceSocketManager
-from twisted.internet import reactor
+from colors import phrases
 
 
-class Order:
-    client: Client
-    socket: BinanceSocketManager
-
-    ticketSocketKey: str = None
-    userSocketKey: str = None
-
-    latestPrice: float = None
-    latestOrder: dict = None
-    accountEvent: dict = None
-
-    @staticmethod
-    def setClient(client: Client):
-        """
-        Sets static client for orders, starts socket
-        """
-        Order.client = client
-        Order.socket = BinanceSocketManager(Order.client)
-        Order.ticketSocketKey = Order.socket.start_trade_socket(
-            SYMBOL, Order.processTradeSocket
-        )
-        Order.userSocketKey = Order.socket.start_user_socket(Order.processUserSocket)
-        Order.socket.start()
-
-        if Order.ticketSocketKey == False or Order.userSocketKey == False:
-            print(colors.fail("FAILED") + " to open socket connection")
-            exit(1)
-
+class Order(Client):
     def __init__(
         self,
         symbol: str,
@@ -90,7 +61,8 @@ class Order:
             + "@ "
             + str(self.price)
             + " totaling "
-            + str(self.quantity) + " "
+            + str(self.quantity)
+            + " "
             + phrases.thresholdPricedOrNot(self.cancelThreshold)
             + "."
         )
@@ -100,6 +72,7 @@ class Order:
         Fill this order
         """
         self.filled = True
+        self.printStatus()
 
     def waitForOrder(self, callback: Callable or None = None) -> dict or False:
         """
@@ -121,7 +94,19 @@ class Order:
         # self.fill()
         # return getOrder
 
-        getOrder = Order.client.get_order(symbol=self.symbol, orderId=self.orderId)
+        retryTimes: int = 3
+        count: int = 0
+        getOrder = None
+        while getOrder == None:
+            try:
+                getOrder = Order.client.get_order(
+                    symbol=self.symbol, orderId=self.orderId
+                )
+            except BinanceAPIException:
+                time.sleep(1)
+                count = count + 1
+                if count > retryTimes:
+                    raise
         try:
             while not getOrder["status"] == "FILLED":
                 if (not callback == None and callback()) or (
@@ -174,66 +159,6 @@ class Order:
     def printStatus(self) -> None:
         print(self)
 
-    @staticmethod
-    def processTradeSocket(message: dict) -> None:
-        """
-        Processes socket message
-        """
-        for i in range(len(str(message["p"]))):
-            sys.stdout.write("\b")
-        sys.stdout.write(str(message["p"]))
-        sys.stdout.flush()
-        Order.latestPrice = float(message["p"])
-
-    @staticmethod
-    def processUserSocket(message: dict) -> None:
-        """
-        Processes user socket event
-        """
-        print(message)
-        Order.accountEvent = json.loads(message)
-
-    @staticmethod
-    def getOpenOrders(symbol: str) -> list:
-        """
-        Returns open orders
-        """
-        return list(Order.client.get_open_orders(symbol=symbol))
-
-    @staticmethod
-    def getLatestOrderPrice() -> float:
-        if Order.latestPrice == None:
-            while Order.latestPrice == None:
-                return float(
-                    Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]["price"]
-                )
-        return Order.latestPrice
-
-    @staticmethod
-    def getLatestOrder() -> dict:
-        if Order.latestOrder == None:
-            return Order.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
-        return Order.latestOrder
-
-    @staticmethod
-    def getAccountEvent() -> dict:
-        return Order.accountEvent
-
-    @staticmethod
-    def stopSocket():
-        """
-        Stops the socket and reactor
-        """
-        Order.socket.close()
-        reactor.stop()
-
-    @staticmethod
-    def cancelOrder(symbol: str, orderId: str) -> dict:
-        """
-        Cancel an order
-        """
-        return Order.client.cancel_order(symbol=symbol, orderId=orderId)
-
     def cancel(self) -> dict:
         """
         Cancel this order
@@ -242,11 +167,3 @@ class Order:
         self.cancelled = True
         self.printStatus()
         return Order.cancelOrder(self.symbol, self.orderId)
-
-    @staticmethod
-    def getAssetBalance(asset: str) -> float:
-        return float(Order.client.get_asset_balance(asset=asset)["free"])
-
-    @staticmethod
-    def getAveragePrice(asset: str) -> float:
-        return float(Order.client.get_avg_price(symbol=asset)["price"])

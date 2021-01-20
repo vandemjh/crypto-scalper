@@ -91,13 +91,13 @@ def writeOrder(order: dict) -> None:
 try:
     print(colors.info("Press Ctrl+C to stop"))
     while True:
-        latestTradePrice = Order.getLatestOrderPrice()
-        buyPrice = latestTradePrice - (latestTradePrice * (SCALP_PERCENT / 100))
+        averagePrice = Order.getAveragePrice(SYMBOL)
+        buyPrice = averagePrice - (averagePrice * (SCALP_PERCENT / 100))
         buyQuantity = balance / buyPrice
 
         # Place and wait for buy order
-        cancelThreshold: float = latestTradePrice + (
-            latestTradePrice * (SCALP_PERCENT / 100)
+        cancelThreshold: float = averagePrice + (
+            averagePrice * (SCALP_PERCENT / 100)
         )
         buyOrder = Order(
             symbol=SYMBOL,
@@ -111,6 +111,7 @@ try:
             cancelThreshold=cancelThreshold,
         )
         buyOrder.place()
+        time.sleep(1)  # Wait for order to be accepted by exchange
         buyResult = buyOrder.waitForOrder()
         if not buyResult:  # If order is cancelled, restart
             continue
@@ -136,11 +137,12 @@ try:
         time.sleep(10)  # Avoid placing buy order right after
 except Exception as e:
     print(colors.warn("\nInterrupted!"))
-    if len(Order.getOpenOrders(SYMBOL)) != 0:
+    openOrders = Order.getOpenOrders(SYMBOL)
+    if len(openOrders) != 0:
         print("Canceling open orders:")
     else:
         print("No open orders")
-    for order in Order.getOpenOrders(SYMBOL):
+    for order in openOrders:
         print(order["orderId"])
         Order.cancelOrder(order["symbol"], order["orderId"])
 
