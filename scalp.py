@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from binance.client import Client
 from binance.enums import *
 import time
-from colors import colors
+from util.colors import colors
 import traceback
 from order import Order
 from settings import *
@@ -96,9 +96,7 @@ try:
         buyQuantity = balance / buyPrice
 
         # Place and wait for buy order
-        cancelThreshold: float = averagePrice + (
-            averagePrice * (SCALP_PERCENT / 100)
-        )
+        cancelThreshold: float = averagePrice + (averagePrice * (SCALP_PERCENT / 100))
         buyOrder = Order(
             symbol=SYMBOL,
             side=SIDE_BUY,

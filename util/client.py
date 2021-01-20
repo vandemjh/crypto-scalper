@@ -1,8 +1,9 @@
 import sys
+import json
 
 from twisted.internet import reactor
 from settings import SYMBOL
-import colors
+from util.colors import *
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
 

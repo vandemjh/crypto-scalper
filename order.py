@@ -1,11 +1,11 @@
 from typing import Callable
-from client import Client
+from util.client import Client
 
 from binance.exceptions import BinanceAPIException
 from settings import DEBUG
 import time
 from binance.enums import SIDE_BUY, SIDE_SELL
-from colors import phrases
+from util.colors import phrases
 
 
 class Order(Client):
