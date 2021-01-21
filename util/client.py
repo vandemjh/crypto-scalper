@@ -41,14 +41,16 @@ class Client:
             exit(1)
 
     @staticmethod
-    def processTradeSocket(message: dict) -> None:
+    def processTradeSocket(message: dict, printOut=False) -> None:
         """
         Processes socket message
         """
-        for i in range(len(str(message["p"]))):
-            sys.stdout.write("\b")
-        sys.stdout.write(str(message["p"]))
-        sys.stdout.flush()
+        if DEBUG:
+            toPrint: str = message["p"]
+            for i in range(len(toPrint)):
+                sys.stdout.write("\b")
+            sys.stdout.write(toPrint)
+            sys.stdout.flush()
         Client.latestPrice = float(message["p"])
 
     @staticmethod

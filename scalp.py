@@ -1,7 +1,6 @@
 import os
 import json
 from dotenv import load_dotenv
-from binance.client import Client
 from binance.enums import *
 import time
 from util.colors import colors
@@ -9,6 +8,7 @@ import traceback
 from order import Order
 from settings import *
 import datetime
+from util.client import Client
 
 # CONST EVAL
 OUTPUT_FILE = (
@@ -20,16 +20,15 @@ ORDER_HISTORY = []
 load_dotenv()
 api_key = os.getenv("KEY")
 api_secret = os.getenv("SECRET")
-client = Client(api_key, api_secret, tld="us")
+client = Client(api_key, api_secret)
 api_key = api_secret = None
-Order.setClient(client)
 
-balance = (client.get_asset_balance(asset="USDT"))["free"]
+balance: float = client.getAssetBalance("USDT")
 balance = float(balance) * (IN_PLAY_PERCENT / 100)
 
 print(colors.info("Available balance is: " + str(balance)))
 print(colors.info("Scalping: " + str(SCALP_PERCENT) + "%"))
-exchangeInfo = client.get_exchange_info()
+exchangeInfo = client.getExchangeInformation()
 symbols = exchangeInfo["symbols"]
 
 baseAsset: str = None

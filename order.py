@@ -54,7 +54,9 @@ class Order(Client):
 
     def __str__(self) -> str:
         return (
-            "\n"  # Added newline
+            "\n"
+            if DEBUG
+            else ""  # Added newline
             + phrases.cancelled(self.cancelled)
             + phrases.filledOrPlaced(self.filled)
             + phrases.buyOrSell(self.side)
@@ -93,6 +95,9 @@ class Order(Client):
         # print(getOrder)
         # self.fill()
         # return getOrder
+        if DEBUG:
+            time.sleep(3)
+            return {}
 
         retryTimes: int = 3
         count: int = 0
