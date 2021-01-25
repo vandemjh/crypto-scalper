@@ -4,7 +4,7 @@ import json
 from twisted.internet import reactor
 from settings import SYMBOL
 from util.colors import *
-from binance.client import Client
+from binance.client import Client as BinanceClient
 from binance.websockets import BinanceSocketManager
 
 
@@ -13,7 +13,7 @@ class Client:
     Encapsulation of binance.Client
     """
 
-    client: Client
+    client: BinanceClient
     socket: BinanceSocketManager
 
     ticketSocketKey: str = None
@@ -24,11 +24,11 @@ class Client:
     accountEvent: dict = None
 
     @staticmethod
-    def setClient(client: Client):
+    def setClient(apiKey="", apiSecret="", tld="com"):
         """
         Sets static client for orders, starts socket
         """
-        Client.client = client
+        Client.client = BinanceClient(api_key=apiKey, api_secret=apiSecret, tld=tld)
         Client.socket = BinanceSocketManager(Client.client)
         Client.ticketSocketKey = Client.socket.start_trade_socket(
             SYMBOL, Client.processTradeSocket
@@ -113,3 +113,7 @@ class Client:
     @staticmethod
     def getPriceChangeStatistics(asset: str) -> dict:
         return Client.client.get_ticker(symbol=asset)["weightedAvgPrice"]
+
+    @staticmethod
+    def getExchangeInformation():
+        return Client.client.get_exchange_info()

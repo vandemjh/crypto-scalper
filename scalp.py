@@ -20,15 +20,15 @@ ORDER_HISTORY = []
 load_dotenv()
 api_key = os.getenv("KEY")
 api_secret = os.getenv("SECRET")
-client = Client(api_key, api_secret)
+Client.setClient(apiKey=api_key, apiSecret=api_secret, tld="us")
 api_key = api_secret = None
 
-balance: float = client.getAssetBalance("USDT")
+balance: float = Client.getAssetBalance("USDT")
 balance = float(balance) * (IN_PLAY_PERCENT / 100)
 
 print(colors.info("Available balance is: " + str(balance)))
 print(colors.info("Scalping: " + str(SCALP_PERCENT) + "%"))
-exchangeInfo = client.getExchangeInformation()
+exchangeInfo = Client.getExchangeInformation()
 symbols = exchangeInfo["symbols"]
 
 baseAsset: str = None
