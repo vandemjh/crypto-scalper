@@ -24,7 +24,7 @@ class Client:
     accountEvent: dict = None
 
     @staticmethod
-    def setClient(apiKey="", apiSecret="", tld="com"):
+    def setClient(apiKey: str = "", apiSecret: str = "", tld: str = "com"):
         """
         Sets static client for orders, starts socket
         """

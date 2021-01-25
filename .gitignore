@@ -147,3 +147,5 @@ dmypy.json
 .vscode/
 orders.json
 output/
+
+nohup.out
