@@ -69,18 +69,18 @@ class Client:
         return list(Client.client.get_open_orders(symbol=symbol))
 
     @staticmethod
-    def getLatestOrderPrice() -> float:
+    def getLatestOrderPrice(symbol: str) -> float:
         if Client.latestPrice == None:
             while Client.latestPrice == None:
                 return float(
-                    Client.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]["price"]
+                    Client.client.get_recent_trades(symbol=symbol, limit=1)[0]["price"]
                 )
         return Client.latestPrice
 
     @staticmethod
-    def getLatestOrder() -> dict:
+    def getLatestOrder(symbol: str) -> dict:
         if Client.latestOrder == None:
-            return Client.client.get_recent_trades(symbol=SYMBOL, limit=1)[0]
+            return Client.client.get_recent_trades(symbol=symbol, limit=1)[0]
         return Client.latestOrder
 
     @staticmethod

@@ -90,7 +90,11 @@ def writeOrder(order: dict) -> None:
 try:
     print(colors.info("Press Ctrl+C to stop"))
     while True:
-        averagePrice = Order.getAveragePrice(SYMBOL)
+        averagePrice = (
+            Order.getAveragePrice(SYMBOL)
+            if Order.getAveragePrice(SYMBOL) < Order.getLatestOrderPrice(SYMBOL)
+            else Order.getAveragePrice(SYMBOL)
+        )
         buyPrice = averagePrice - (averagePrice * (SCALP_PERCENT / 100))
         buyQuantity = balance / buyPrice
 
