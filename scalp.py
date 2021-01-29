@@ -93,7 +93,7 @@ try:
         averagePrice = (
             Order.getAveragePrice(SYMBOL)
             if Order.getAveragePrice(SYMBOL) < Order.getLatestOrderPrice(SYMBOL)
-            else Order.getAveragePrice(SYMBOL)
+            else Order.getLatestOrderPrice(SYMBOL)
         )
         buyPrice = averagePrice - (averagePrice * (SCALP_PERCENT / 100))
         buyQuantity = balance / buyPrice
