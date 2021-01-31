@@ -104,7 +104,7 @@ class Order(Client):
         getOrder = None
         while getOrder == None:
             try:
-                getOrder = Order.client.get_order(
+                getOrder = Order.binanceClient.get_order(
                     symbol=self.symbol, orderId=self.orderId
                 )
             except BinanceAPIException:
@@ -121,7 +121,7 @@ class Order(Client):
                     self.cancel()
                     return False
                 time.sleep(10)
-                getOrder = Order.client.get_order(
+                getOrder = Order.binanceClient.get_order(
                     symbol=self.symbol, orderId=self.orderId
                 )
         except:
@@ -139,7 +139,7 @@ class Order(Client):
             if DEBUG:
                 pass
             else:
-                result = Order.client.order_limit_buy(
+                result = Order.binanceClient.order_limit_buy(
                     symbol=self.symbol,
                     quantity=self.quantity,
                     price=self.price,
@@ -151,7 +151,7 @@ class Order(Client):
             if DEBUG:
                 pass
             else:
-                result = Order.client.order_limit_sell(
+                result = Order.binanceClient.order_limit_sell(
                     symbol=self.symbol,
                     quantity=self.quantity,
                     price=self.price,
