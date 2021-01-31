@@ -13,7 +13,7 @@ class Client:
     Encapsulation of binance.Client
     """
 
-    client: BinanceClient
+    binanceClient: BinanceClient
     socket: BinanceSocketManager
 
     ticketSocketKey: str = None
@@ -28,8 +28,8 @@ class Client:
         """
         Sets static client for orders, starts socket
         """
-        Client.client = BinanceClient(api_key=apiKey, api_secret=apiSecret, tld=tld)
-        Client.socket = BinanceSocketManager(Client.client)
+        Client.binanceClient = BinanceClient(api_key=apiKey, api_secret=apiSecret, tld=tld)
+        Client.socket = BinanceSocketManager(Client.binanceClient)
         Client.ticketSocketKey = Client.socket.start_trade_socket(
             SYMBOL, Client.processTradeSocket
         )
@@ -66,21 +66,21 @@ class Client:
         """
         Returns open orders
         """
-        return list(Client.client.get_open_orders(symbol=symbol))
+        return list(Client.binanceClient.get_open_orders(symbol=symbol))
 
     @staticmethod
     def getLatestOrderPrice(symbol: str) -> float:
         if Client.latestPrice == None:
             while Client.latestPrice == None:
                 return float(
-                    Client.client.get_recent_trades(symbol=symbol, limit=1)[0]["price"]
+                    Client.binanceClient.get_recent_trades(symbol=symbol, limit=1)[0]["price"]
                 )
         return Client.latestPrice
 
     @staticmethod
     def getLatestOrder(symbol: str) -> dict:
         if Client.latestOrder == None:
-            return Client.client.get_recent_trades(symbol=symbol, limit=1)[0]
+            return Client.binanceClient.get_recent_trades(symbol=symbol, limit=1)[0]
         return Client.latestOrder
 
     @staticmethod
@@ -100,20 +100,20 @@ class Client:
         """
         Cancel an order
         """
-        return Client.client.cancel_order(symbol=symbol, orderId=orderId)
+        return Client.binanceClient.cancel_order(symbol=symbol, orderId=orderId)
 
     @staticmethod
     def getAssetBalance(asset: str) -> float:
-        return float(Client.client.get_asset_balance(asset=asset)["free"])
+        return float(Client.binanceClient.get_asset_balance(asset=asset)["free"])
 
     @staticmethod
     def getAveragePrice(asset: str) -> float:
-        return float(Client.client.get_avg_price(symbol=asset)["price"])
+        return float(Client.binanceClient.get_avg_price(symbol=asset)["price"])
 
     @staticmethod
     def getPriceChangeStatistics(asset: str) -> dict:
-        return Client.client.get_ticker(symbol=asset)["weightedAvgPrice"]
+        return Client.binanceClient.get_ticker(symbol=asset)["weightedAvgPrice"]
 
     @staticmethod
     def getExchangeInformation():
-        return Client.client.get_exchange_info()
+        return Client.binanceClient.get_exchange_info()
