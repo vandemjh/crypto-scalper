@@ -4,6 +4,7 @@ import time
 import asyncio
 import datetime
 import traceback
+from trade import Trade
 from settings import *
 from order import Order
 from binance.enums import *
@@ -18,12 +19,14 @@ OUTPUT_FILE = (
 
 ORDER_HISTORY = []
 
+
 def init() -> None:
     load_dotenv()
     api_key = os.getenv("KEY")
     api_secret = os.getenv("SECRET")
     Client.init(apiKey=api_key, apiSecret=api_secret, tld="us")
     api_key = api_secret = None
+
 
 init()
 balance: float = Client.getAssetBalance("USDT")
@@ -37,7 +40,7 @@ symbols = exchangeInfo["symbols"]
 baseAsset: str = None
 baseAssetPrecision: int = None
 quoteAsset: str = None
-quotePrecision: int = None
+quoteAssetPrecision: int = None
 filters: list = []
 minPrice: float = 0
 maxPrice: float = 0
@@ -48,7 +51,7 @@ for symbol in symbols:
         baseAsset = symbol["baseAsset"]
         baseAssetPrecision = symbol["baseAssetPrecision"]
         quoteAsset = symbol["quoteAsset"]
-        quotePrecision = symbol["quotePrecision"]
+        quoteAssetPrecision = symbol["quotePrecision"]
         filters = symbol["filters"]
 
 for filter in filters:
@@ -72,7 +75,7 @@ print(
     + quoteAsset
     + colors.END
     + colors.info("\n\tQuote asset precision: ")
-    + str(quotePrecision)
+    + str(quoteAssetPrecision)
     + colors.info("\n\tMinimum price: ")
     + str(minPrice)
     + colors.info("\n\tMaximum price: ")
@@ -92,67 +95,21 @@ def writeOrder(order: dict) -> None:
 
 try:
     print(colors.info("Press Ctrl+C to stop"))
-    while True:
-        averagePrice = (
-            Order.getAveragePrice(SYMBOL)
-            if Order.getAveragePrice(SYMBOL) < Order.getLatestOrderPrice(SYMBOL)
-            else Order.getLatestOrderPrice(SYMBOL)
-        )
-        buyPrice = averagePrice - (averagePrice * (SCALP_PERCENT / 100))
-        buyQuantity = balance / buyPrice
-
-        # Place and wait for buy order
-        cancelThreshold: float = averagePrice + (averagePrice * (SCALP_PERCENT / 100))
-        buyOrder = Order(
-            symbol=SYMBOL,
-            side=SIDE_BUY,
-            price=buyPrice,
-            quantity=buyQuantity,
-            basePrecision=baseAssetPrecision,
-            quotePrecision=quotePrecision,
-            tickSize=tickSize,
-            stepSize=stepSize,
-            cancelThreshold=cancelThreshold,
-        )
-        buyOrder.place()
-        time.sleep(1)  # Wait for order to be accepted by exchange
-        buyResult = buyOrder.waitForOrder()
-        if not buyResult:  # If order is cancelled, restart
-            continue
-        writeOrder(buyResult)
-
-        # Place and wait for sell order
-        sellPrice = buyPrice + (buyPrice * (SCALP_PERCENT / 100))
-        sellQuantity = Order.getAssetBalance(baseAsset)
-        if sellQuantity == 0:
-            continue
-        sellOrder = Order(
-            symbol=SYMBOL,
-            side=SIDE_SELL,
-            price=sellPrice,
-            quantity=sellQuantity,
-            basePrecision=quotePrecision,
-            quotePrecision=quotePrecision,
-            tickSize=tickSize,
-            stepSize=stepSize,
-        )
-        sellOrder.place()
-        writeOrder(sellOrder.waitForOrder())
-        time.sleep(10)  # Avoid placing buy order right after
+    
 except Exception as e:
     print(colors.warn("\nInterrupted!"))
-    openOrders = Order.getOpenOrders(SYMBOL)
+    openOrders = Client.getOpenOrders(SYMBOL)
     if len(openOrders) != 0:
         print("Canceling open orders:")
     else:
         print("No open orders")
     for order in openOrders:
         print(order["orderId"])
-        Order.cancelOrder(order["symbol"], order["orderId"])
+        Client.cancelOrder(order["symbol"], order["orderId"])
 
     print(colors.warn("\nStack trace:"))
     print(e)
     traceback.print_exc()
     pass
-
-Order.stopSocket()
+finally:
+    Client.stopSocket()
