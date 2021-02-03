@@ -8,7 +8,7 @@ from binance.enums import SIDE_BUY, SIDE_SELL
 from util.colors import phrases
 
 
-class Order(Client):
+class Order():
     def __init__(
         self,
         symbol: str,
