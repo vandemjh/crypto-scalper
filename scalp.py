@@ -4,6 +4,7 @@ import time
 import asyncio
 import datetime
 import traceback
+from util.util import Util
 from trade import Trade
 from settings import *
 from order import Order
@@ -29,11 +30,6 @@ def init() -> None:
 
 
 init()
-balance: float = Client.getAssetBalance("USDT")
-balance = float(balance) * (IN_PLAY_PERCENT / 100)
-
-print(colors.info("Available balance is: " + str(balance)))
-print(colors.info("Scalping: " + str(SCALP_PERCENT) + "%"))
 exchangeInfo = Client.getExchangeInformation()
 symbols = exchangeInfo["symbols"]
 
@@ -62,6 +58,12 @@ for filter in filters:
     if filter["filterType"] == "LOT_SIZE":
         stepSize = float(filter["stepSize"])
 
+balance: float = Client.getAssetBalance("USDT")
+balance = float(balance) * (IN_PLAY_PERCENT / 100)
+
+print(colors.info("Available balance is: " + str(balance)))
+print(colors.info("Scalping: " + str(SCALP_PERCENT) + "%"))
+
 print(
     colors.warn("Exchange information")
     + colors.info("\n\tBase asset: ")
@@ -87,25 +89,12 @@ print(
 )
 
 
-def writeOrder(order: dict) -> None:
-    ORDER_HISTORY.append(order)
-    with open(OUTPUT_FILE, "w+") as f:
-        f.write(json.dumps(ORDER_HISTORY))
-
-
 try:
     print(colors.info("Press Ctrl+C to stop"))
-    
+
 except Exception as e:
     print(colors.warn("\nInterrupted!"))
-    openOrders = Client.getOpenOrders(SYMBOL)
-    if len(openOrders) != 0:
-        print("Canceling open orders:")
-    else:
-        print("No open orders")
-    for order in openOrders:
-        print(order["orderId"])
-        Client.cancelOrder(order["symbol"], order["orderId"])
+    Util.cancelAllOrders(SYMBOL)
 
     print(colors.warn("\nStack trace:"))
     print(e)
