@@ -2,7 +2,7 @@ from settings import DEBUG
 from binance.enums import SIDE_BUY, SIDE_SELL
 
 # Adapted from Blender source code
-class colors:
+class Colors:
     RED = ERROR = "\u001b[31m"
     GREEN = FILLED = "\u001b[32m"
     YELLOW = PLACED = "\u001b[33m"
@@ -17,26 +17,26 @@ class colors:
     END = "\033[0m"
 
     def warn(input: str) -> str:
-        return colors.WARNING + input + colors.END
+        return Colors.WARNING + input + Colors.END
 
     def info(input: str) -> str:
-        return colors.INFO + input + colors.END
+        return Colors.INFO + input + Colors.END
 
     def fail(input: str) -> str:
-        return colors.FAIL + input + colors.END
+        return Colors.FAIL + input + Colors.END
 
 
 class phrases:
-    PLACED = colors.PLACED + "PLACED " + colors.END
-    FILLED = colors.FILLED + "FILLED " + colors.END
-    BUY = colors.BUY + "BUY " + colors.END
-    SELL = colors.SELL + "SELL " + colors.END
-    ERROR = colors.ERROR + "ERROR " + colors.END
-    WARNING = colors.WARNING + "WARNING " + colors.END
-    THRESHOLD = colors.THRESHOLD + "THRESHOLD " + colors.END
+    PLACED = Colors.PLACED + "PLACED " + Colors.END
+    FILLED = Colors.FILLED + "FILLED " + Colors.END
+    BUY = Colors.BUY + "BUY " + Colors.END
+    SELL = Colors.SELL + "SELL " + Colors.END
+    ERROR = Colors.ERROR + "ERROR " + Colors.END
+    WARNING = Colors.WARNING + "WARNING " + Colors.END
+    THRESHOLD = Colors.THRESHOLD + "THRESHOLD " + Colors.END
 
     def debug() -> str:
-        return (colors.WARNING + "(test) " + colors.END) if DEBUG else ""
+        return (Colors.WARNING + "(test) " + Colors.END) if DEBUG else ""
 
     def buyOrSell(side: SIDE_BUY or SIDE_SELL) -> str:
         return (phrases.BUY if side == SIDE_BUY else phrases.SELL) + phrases.debug()
@@ -46,4 +46,4 @@ class phrases:
     def thresholdPricedOrNot(cancelThreshold: bool):
         return phrases.THRESHOLD + str(cancelThreshold) if not cancelThreshold == None else "(no threshold)"
     def cancelled(cancelled: bool):
-        return colors.fail("CANCELLED ") if cancelled else ""
+        return Colors.fail("CANCELLED ") if cancelled else ""
