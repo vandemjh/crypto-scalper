@@ -1,13 +1,14 @@
 import os
 import json
-from dotenv import load_dotenv
-from binance.enums import *
 import time
-from util.colors import colors
-import traceback
-from order import Order
-from settings import *
+import asyncio
 import datetime
+import traceback
+from settings import *
+from order import Order
+from binance.enums import *
+from dotenv import load_dotenv
+from util.colors import colors
 from util.client import Client
 
 # CONST EVAL
@@ -17,12 +18,14 @@ OUTPUT_FILE = (
 
 ORDER_HISTORY = []
 
-load_dotenv()
-api_key = os.getenv("KEY")
-api_secret = os.getenv("SECRET")
-Client.setClient(apiKey=api_key, apiSecret=api_secret, tld="us")
-api_key = api_secret = None
+def init() -> None:
+    load_dotenv()
+    api_key = os.getenv("KEY")
+    api_secret = os.getenv("SECRET")
+    Client.init(apiKey=api_key, apiSecret=api_secret, tld="us")
+    api_key = api_secret = None
 
+init()
 balance: float = Client.getAssetBalance("USDT")
 balance = float(balance) * (IN_PLAY_PERCENT / 100)
 
