@@ -24,7 +24,7 @@ class Client:
     accountEvent: dict = None
 
     @staticmethod
-    def setClient(apiKey: str = "", apiSecret: str = "", tld: str = "com"):
+    def init(apiKey: str = "", apiSecret: str = "", tld: str = "com"):
         """
         Sets static client for orders, starts socket
         """
@@ -33,6 +33,7 @@ class Client:
         Client.ticketSocketKey = Client.socket.start_trade_socket(
             SYMBOL, Client.processTradeSocket
         )
+        Client.latestPrice = Client.getLatestOrderPrice(SYMBOL)
         Client.userSocketKey = Client.socket.start_user_socket(Client.processUserSocket)
         Client.socket.start()
 
@@ -45,7 +46,7 @@ class Client:
         """
         Processes socket message
         """
-        if DEBUG:
+        if DEBUG or printOut:
             toPrint: str = message["p"]
             for i in range(len(toPrint)):
                 sys.stdout.write("\b")
@@ -71,10 +72,9 @@ class Client:
     @staticmethod
     def getLatestOrderPrice(symbol: str) -> float:
         if Client.latestPrice == None:
-            while Client.latestPrice == None:
-                return float(
-                    Client.binanceClient.get_recent_trades(symbol=symbol, limit=1)[0]["price"]
-                )
+            return float(
+                Client.binanceClient.get_recent_trades(symbol=symbol, limit=1)[0]["price"]
+            )
         return Client.latestPrice
 
     @staticmethod
