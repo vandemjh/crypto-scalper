@@ -113,9 +113,11 @@ class Order(Client):
                 if count > retryTimes:
                     raise
         try:
+            # Does not account for partially filled orders
             while not getOrder["status"] == "FILLED":
                 if (not callback == None and callback()) or (
                     not self.cancelThreshold == None
+                    and self.side == SIDE_BUY
                     and Order.getAveragePrice(self.symbol) > self.cancelThreshold
                 ):
                     self.cancel()
