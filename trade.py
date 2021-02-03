@@ -2,7 +2,7 @@ from threading import Thread
 import time
 from util.client import Client
 from binance.enums import SIDE_BUY, SIDE_SELL
-from settings import SYMBOL
+from settings import SCALP_PERCENT, SYMBOL
 from typing import Callable, List
 from order import Order
 
@@ -12,49 +12,94 @@ class Trade:
     A trade is a set of one buy and one sell order
     """
 
+    def findBestPrice() -> float:
+        return (
+            Order.getAveragePrice(SYMBOL)
+            if Order.getAveragePrice(SYMBOL) < Order.getLatestOrderPrice(SYMBOL)
+            else Order.getLatestOrderPrice(SYMBOL)
+        )
+
+    def setValues(self):
+        self.setBuyValues(self.findBestPrice())
+        self.setSellValues(self.findBestPrice())
+        if self.buyPrice >= self.sellPrice:
+            raise Exception("Buy price higher than sell")
+
+    def setBuyValues(self, averagePrice: float):
+        self.buyPrice = averagePrice - (averagePrice * (self.spreadPercent) / 100)
+        self.buyQuantity = Client.getAssetBalance(self.quoteAsset) / self.buyPrice
+        self.buyCancelThreshold: float = averagePrice + (
+            averagePrice * (SCALP_PERCENT / 100)
+        )
+
+    def setSellValues(self, averagePrice: float):
+        self.sellPrice = averagePrice + (averagePrice * (self.spreadPercent) / 100)
+        self.sellQuantity = Order.getAssetBalance(self.baseAsset)
+        self.sellCancelThreshold = None  # Unused right now
+
+    def initBuy(self, basePrecision, quotePrecision, tickSize, stepSize):
+        self.buyOrder: Order = Order(
+            symbol=SYMBOL,
+            side=SIDE_BUY,
+            price=self.buyPrice,
+            quantity=self.buyQuantity,
+            basePrecision=self.basePrecision,
+            quotePrecision=self.quotePrecision,
+            tickSize=self.tickSize,
+            stepSize=self.stepSize,
+            cancelThreshold=self.buyCancelThreshold,
+        )
+
+    def initSell(self):
+        self.sellOrder = Order(
+            symbol=SYMBOL,
+            side=SIDE_SELL,
+            price=self.sellPrice,
+            quantity=self.sellQuantity,
+            basePrecision=self.basePrecision,
+            quotePrecision=self.quotePrecision,
+            tickSize=self.tickSize,
+            stepSize=self.stepSize,
+            cancelThreshold=self.sellCancelThreshold,
+        )
+
     def ___init___(
         self,
-        quantity=0,
-        spreadPercent=0,
+        baseAsset: str = "",
+        quoteAsset: str = "",
         basePrecision=0,
         quotePrecision=0,
         tickSize=0,
         stepSize=0,
-        cancelThreshold=0,
     ):
-        assetPrice: float = Client.latestPrice
-        self.buyOrder: Order = Order(
-            symbol=SYMBOL,
-            side=SIDE_BUY,
-            price=assetPrice + (assetPrice * spreadPercent / 100),
-            quantity=quantity,
-            basePrecision=basePrecision,
-            quotePrecision=quotePrecision,
-            tickSize=tickSize,
-            stepSize=stepSize,
-            cancelThreshold=cancelThreshold,
-        )
-        self.sellOrder = Order(
-            symbol=SYMBOL,
-            side=SIDE_SELL,
-            price=assetPrice - (assetPrice * spreadPercent / 100),
-            quantity=quantity,
-            basePrecision=basePrecision,
-            quotePrecision=quotePrecision,
-            tickSize=tickSize,
-            stepSize=stepSize,
-            cancelThreshold=cancelThreshold,
-        )
+        self.baseAsset = baseAsset
+        self.spreadPercent = SCALP_PERCENT / 2
+        self.quoteAsset = quoteAsset
+        self.basePrecision = basePrecision
+        self.quotePrecision = quotePrecision
+        self.tickSize = tickSize
+        self.stepSize = stepSize
+        self.buyPrice = 0
+        self.sellPrice = 0
+
+        self.setValues(self.findBestPrice())
+        self.initBuy()
+        self.initSell()
 
     def placeAndAwaitBuy(self) -> dict:
         self.buyOrder.place()
         time.sleep(1)  # Wait for order to be accepted by exchange
-        return {}.update(filled=self.buyOrder.waitForOrder())
+        order = self.buyOrder.waitForOrder()
+        while not order:  # Order cancelled or not filled
+            self.setValues()
+            self.initBuy()
+            order = self.buyOrder.waitForOrder()
+        return {}.update(order=order)
 
     def placeAndAwaitSell(self) -> dict:
         self.sellOrder.place()
         time.sleep(1)  # Wait for order to be accepted by exchange
-        return {}.update(filled=self.sellOrder.waitForOrder())
+        return {}.update(order=self.sellOrder.waitForOrder())
 
     async def execute(self) -> dict:
         return (
