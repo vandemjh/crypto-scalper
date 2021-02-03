@@ -38,7 +38,7 @@ class Client:
         Client.socket.start()
 
         if Client.ticketSocketKey == False or Client.userSocketKey == False:
-            print(colors.fail("FAILED") + " to open socket connection")
+            print(Colors.fail("FAILED") + " to open socket connection")
             exit(1)
 
     @staticmethod
