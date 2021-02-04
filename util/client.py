@@ -4,7 +4,7 @@ import time
 from binance.exceptions import BinanceAPIException
 
 from twisted.internet import reactor
-from settings import SYMBOL
+from settings import SLEEP_MULTIPLIER, SYMBOL
 from util.colors import *
 from binance.client import Client as BinanceClient
 from binance.websockets import BinanceSocketManager
@@ -113,7 +113,7 @@ class Client:
                     "Order #" + str(orderId) + " cancel failed: " + str(orderId)
                 )
             )
-            time.sleep(1)  # Wait for order to be accepted
+            time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for order to be accepted
             return Client.binanceClient.cancel_order(symbol=symbol, orderId=orderId)
 
     @staticmethod
@@ -121,7 +121,7 @@ class Client:
         return float(Client.binanceClient.get_asset_balance(asset=asset)["free"])
 
     @staticmethod
-    def getAveragePrice(asset: str) -> float:
+    def getAveragePrice(asset: str = SYMBOL) -> float:
         return float(Client.binanceClient.get_avg_price(symbol=asset)["price"])
 
     @staticmethod

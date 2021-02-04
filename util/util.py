@@ -8,6 +8,7 @@ from settings import (
     ORDER_HISTORY,
     OUTPUT_FILE,
     SCALP_PERCENT,
+    SLEEP_MULTIPLIER,
     SYMBOL,
 )
 from util.client import Client
@@ -16,7 +17,7 @@ from util.client import Client
 class Util:
     @staticmethod
     def cancelAllOrders(symbol=SYMBOL):
-        time.sleep(1)  # Wait for orders to be accepted
+        time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for orders to be accepted
         openOrders = Client.getOpenOrders(symbol)
         if len(openOrders) != 0:
             print("Canceling open orders for " + Colors.info(SYMBOL) + ":")

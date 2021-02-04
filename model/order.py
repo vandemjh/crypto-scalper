@@ -4,7 +4,7 @@ from typing import Callable
 from util.client import Client
 
 from binance.exceptions import BinanceAPIException
-from settings import DEBUG
+from settings import DEBUG, SLEEP_MULTIPLIER
 import time
 from binance.enums import SIDE_BUY, SIDE_SELL
 from util.colors import Colors, phrases
@@ -93,13 +93,13 @@ class Order:
         #     or not getOrder["X"] == "FILLED"
         #     or not int(getOrder["i"]) == self.orderId
         # ):
-        #     time.sleep(1)
+        #     time.sleep(SLEEP_MULTIPLIER *1)
         #     getOrder = Order.getAccountEvent()
         # print(getOrder)
         # self.fill()
         # return getOrder
         if DEBUG:
-            time.sleep(3)
+            time.sleep(SLEEP_MULTIPLIER * 3)
             return {}
 
         retryTimes: int = 3
@@ -109,7 +109,9 @@ class Order:
             try:
                 getOrder = Client.getOrder(orderId=self.orderId)
             except BinanceAPIException:
-                time.sleep(1)  # Wait for order to be accepted by exchange
+                time.sleep(
+                    SLEEP_MULTIPLIER * 1
+                )  # Wait for order to be accepted by exchange
                 count = count + 1
                 if count > retryTimes:
                     raise
@@ -119,11 +121,11 @@ class Order:
                 if (not callback == None and callback()) or (
                     not self.cancelThreshold == None
                     and self.side == SIDE_BUY
-                    and Client.getAveragePrice(self.symbol) > self.cancelThreshold
+                    and Client.getAveragePrice() > self.cancelThreshold
                 ):
                     self.cancel()
                     return False
-                time.sleep(10)
+                time.sleep(SLEEP_MULTIPLIER * 10)
                 getOrder = Client.getOrder(orderId=self.orderId)
         except:
             raise

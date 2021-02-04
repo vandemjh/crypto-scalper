@@ -2,7 +2,7 @@ import time
 from util.client import Client
 from util.util import Util
 from binance.enums import SIDE_BUY, SIDE_SELL
-from settings import SYMBOL
+from settings import SLEEP_MULTIPLIER, SYMBOL
 from model.exchange import ExchangeInformation
 from model.order import Order
 
@@ -75,18 +75,21 @@ class Trade:
 
     def placeAndAwaitBuy(self) -> dict:
         self.buyOrder.place()
-        time.sleep(1)  # Wait for order to be accepted by exchange
+        time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for order to be accepted by exchange
         order = self.buyOrder.waitForOrder()
         while not order:  # Order cancelled or not filled
             self.setValues()
             self.initBuy()
             self.buyOrder.place()  # Place new order
+            time.sleep(
+                SLEEP_MULTIPLIER * 1
+            )  # Wait for order to be accepted by exchange
             order = self.buyOrder.waitForOrder()
         return {}.update(order=order)
 
     def placeAndAwaitSell(self) -> dict:
         self.sellOrder.place()
-        time.sleep(1)  # Wait for order to be accepted by exchange
+        time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for order to be accepted by exchange
         return {}.update(order=self.sellOrder.waitForOrder())
 
     def execute(self) -> dict:
