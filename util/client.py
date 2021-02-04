@@ -115,5 +115,5 @@ class Client:
         return Client.binanceClient.get_ticker(symbol=asset)["weightedAvgPrice"]
 
     @staticmethod
-    def getExchangeInformation():
+    def getExchangeInformation() -> dict:
         return Client.binanceClient.get_exchange_info()
