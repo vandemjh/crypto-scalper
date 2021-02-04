@@ -67,6 +67,8 @@ class Util:
 
     def getPercentDiff(statedPrice: float) -> str:
         diffPrice: float = Client.latestPrice
+        if not statedPrice:
+            return ""
         return (
             Colors.sell(
                 "↓" + str(round(((diffPrice / statedPrice) - 1) * 100, 2)) + "%"
