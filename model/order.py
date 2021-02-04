@@ -1,3 +1,4 @@
+from model.exchange import ExchangeInformation
 from typing import Callable
 from util.client import Client
 
@@ -5,18 +6,18 @@ from binance.exceptions import BinanceAPIException
 from settings import DEBUG
 import time
 from binance.enums import SIDE_BUY, SIDE_SELL
-from util.colors import phrases
+from util.colors import Colors, phrases
 
 
-class Order():
+class Order:
     def __init__(
         self,
         symbol: str,
         side: SIDE_BUY or SIDE_SELL,
         price: float = 0,
         quantity: float = 0,
-        basePrecision: int = 8,
-        quotePrecision: int = 8,
+        baseAssetPrecision: int = 8,
+        quoteAssetPrecision: int = 8,
         tickSize: float = 0,
         stepSize: float = 0,
         cancelThreshold: float or None = None,
@@ -31,7 +32,7 @@ class Order():
         self.side = side
         self.cancelThreshold = cancelThreshold
 
-        # self.price = round(price, quotePrecision)
+        # self.price = round(price, quoteAssetPrecision)
         ticks = 0
         temp = tickSize
         while temp < 1:
@@ -39,7 +40,7 @@ class Order():
             ticks = ticks + 1
         self.price = round(price, ticks)
 
-        # self.quantity = round(quantity, basePrecision)
+        # self.quantity = round(quantity, baseAssetPrecision)
         ticks = 0
         temp = stepSize
         while temp < 1:
@@ -47,24 +48,23 @@ class Order():
             ticks = ticks + 1
         self.quantity = round(quantity, ticks)
 
-        self.basePrecision = basePrecision
-        self.quotePrecision = quotePrecision
+        self.baseAssetPrecision = baseAssetPrecision
+        self.quoteAssetPrecision = quoteAssetPrecision
         self.tickSize = tickSize
         self.cancelled = cancelled
 
     def __str__(self) -> str:
         return (
-            "\n"
-            if DEBUG
-            else ""  # Added newline
+            ("\n" if DEBUG else "")  # Added newline
             + phrases.cancelled(self.cancelled)
             + phrases.filledOrPlaced(self.filled)
             + phrases.buyOrSell(self.side)
             + "@ "
             + str(self.price)
+            + Colors.buy("(" + str(ExchangeInformation.baseAsset) + ") ")
             + " totaling "
             + str(self.quantity)
-            + " "
+            + Colors.sell("(" + str(ExchangeInformation.quoteAsset) + ") ")
             + phrases.thresholdPricedOrNot(self.cancelThreshold)
             + "."
         )
@@ -104,7 +104,7 @@ class Order():
         getOrder = None
         while getOrder == None:
             try:
-                getOrder = Order.binanceClient.get_order(
+                getOrder = Client.binanceClient.get_order(
                     symbol=self.symbol, orderId=self.orderId
                 )
             except BinanceAPIException:
@@ -118,14 +118,12 @@ class Order():
                 if (not callback == None and callback()) or (
                     not self.cancelThreshold == None
                     and self.side == SIDE_BUY
-                    and Order.getAveragePrice(self.symbol) > self.cancelThreshold
+                    and Client.getAveragePrice(self.symbol) > self.cancelThreshold
                 ):
                     self.cancel()
                     return False
                 time.sleep(10)
-                getOrder = Order.binanceClient.get_order(
-                    symbol=self.symbol, orderId=self.orderId
-                )
+                getOrder = Client.getOrder(orderId=self.orderId)
         except:
             raise
         self.fill()
@@ -141,8 +139,7 @@ class Order():
             if DEBUG:
                 pass
             else:
-                result = Order.binanceClient.order_limit_buy(
-                    symbol=self.symbol,
+                result = Client.orderLimitBuy(
                     quantity=self.quantity,
                     price=self.price,
                 )
@@ -153,8 +150,7 @@ class Order():
             if DEBUG:
                 pass
             else:
-                result = Order.binanceClient.order_limit_sell(
-                    symbol=self.symbol,
+                result = Client.orderLimitSell(
                     quantity=self.quantity,
                     price=self.price,
                 )
@@ -173,4 +169,4 @@ class Order():
         """
         self.cancelled = True
         self.printStatus()
-        return Order.cancelOrder(self.symbol, self.orderId)
+        return Client.cancelOrder(self.symbol, self.orderId)
