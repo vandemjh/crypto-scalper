@@ -1,7 +1,7 @@
 import json
 from util.colors import Colors
 from model.exchange import ExchangeInformation
-from settings import IN_PLAY_PERCENT, ORDER_HISTORY, OUTPUT_FILE, SCALP_PERCENT, SYMBOL
+from settings import IN_PLAY_PERCENT, NUMBER_OF_TRADES, ORDER_HISTORY, OUTPUT_FILE, SCALP_PERCENT, SYMBOL
 from util.client import Client
 
 
@@ -10,7 +10,7 @@ class Util:
     def cancelAllOrders(symbol=SYMBOL):
         openOrders = Client.getOpenOrders(symbol)
         if len(openOrders) != 0:
-            print("Canceling open orders:")
+            print("Canceling open orders for " + Colors.info(SYMBOL) + ":")
         else:
             print("No open orders")
         for order in openOrders:
@@ -18,7 +18,9 @@ class Util:
             Client.cancelOrder(order["symbol"], order["orderId"])
 
     @staticmethod
-    def writeOrder(order: dict, orderHistory: dict = ORDER_HISTORY, outputFile: str = OUTPUT_FILE) -> None:
+    def writeOrder(
+        order: dict, orderHistory: dict = ORDER_HISTORY, outputFile: str = OUTPUT_FILE
+    ) -> None:
         orderHistory.append(order)
         with open(outputFile, "w+") as f:
             f.write(json.dumps(orderHistory))
@@ -27,6 +29,7 @@ class Util:
     def printExchangeInformation() -> None:
         print(Colors.info("Available balance is: " + str(ExchangeInformation.balance)))
         print(Colors.info("Scalping: " + str(SCALP_PERCENT) + "%"))
+        print(Colors.info("Executing : " + str(NUMBER_OF_TRADES) + " trades at a time"))
 
         print(
             Colors.warn("Exchange information")

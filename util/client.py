@@ -23,12 +23,13 @@ class Client:
     latestOrder: dict = None
     accountEvent: dict = None
 
-    @staticmethod
-    def init(apiKey: str = "", apiSecret: str = "", tld: str = "com"):
+    def __init__(self, apiKey: str = "", apiSecret: str = "", tld: str = "com"):
         """
         Sets static client for orders, starts socket
         """
-        Client.binanceClient = BinanceClient(api_key=apiKey, api_secret=apiSecret, tld=tld)
+        Client.binanceClient = BinanceClient(
+            api_key=apiKey, api_secret=apiSecret, tld=tld
+        )
         Client.socket = BinanceSocketManager(Client.binanceClient)
         Client.ticketSocketKey = Client.socket.start_trade_socket(
             SYMBOL, Client.processTradeSocket
@@ -73,7 +74,9 @@ class Client:
     def getLatestOrderPrice(symbol: str) -> float:
         if Client.latestPrice == None:
             return float(
-                Client.binanceClient.get_recent_trades(symbol=symbol, limit=1)[0]["price"]
+                Client.binanceClient.get_recent_trades(symbol=symbol, limit=1)[0][
+                    "price"
+                ]
             )
         return Client.latestPrice
 
@@ -117,3 +120,23 @@ class Client:
     @staticmethod
     def getExchangeInformation() -> dict:
         return Client.binanceClient.get_exchange_info()
+
+    @staticmethod
+    def getOrder(orderId: str, symbol=SYMBOL) -> dict:
+        return Client.binanceClient.get_order(symbol=symbol, orderId=orderId)
+
+    @staticmethod
+    def orderLimitBuy(quantity: float, price: float, symbol=SYMBOL):
+        return Client.binanceClient.order_limit_buy(
+            symbol=symbol,
+            quantity=quantity,
+            price=price,
+        )
+
+    @staticmethod
+    def orderLimitSell(quantity: float, price: float, symbol=SYMBOL):
+        return Client.binanceClient.order_limit_sell(
+            symbol=symbol,
+            quantity=quantity,
+            price=price,
+        )
