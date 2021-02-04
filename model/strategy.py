@@ -13,5 +13,7 @@ class Strategy:
 
     async def execute(self):
         while True:
-            writeOrder(Trade().execute())
+            trade = Trade()
+            await trade.execute()
+            writeOrder(trade)
             times.sleep(10)  # Avoid placing buy order right after

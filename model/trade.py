@@ -3,7 +3,7 @@ import time
 from util.client import Client
 from binance.enums import SIDE_BUY, SIDE_SELL
 from settings import SCALP_PERCENT, SYMBOL
-from typing import Callable, List
+from model import ExchangeInformation
 from model import Order
 
 
@@ -63,22 +63,14 @@ class Trade:
             cancelThreshold=self.sellCancelThreshold,
         )
 
-    def ___init___(
-        self,
-        baseAsset: str = "",
-        quoteAsset: str = "",
-        basePrecision=0,
-        quotePrecision=0,
-        tickSize=0,
-        stepSize=0,
-    ):
-        self.baseAsset = baseAsset
+    def ___init___(self):
+        self.baseAsset = ExchangeInformation.baseAsset
         self.spreadPercent = SCALP_PERCENT / 2
-        self.quoteAsset = quoteAsset
-        self.basePrecision = basePrecision
-        self.quotePrecision = quotePrecision
-        self.tickSize = tickSize
-        self.stepSize = stepSize
+        self.quoteAsset = ExchangeInformation.quoteAsset
+        self.basePrecision = ExchangeInformation.basePrecision
+        self.quotePrecision = ExchangeInformation.quotePrecision
+        self.tickSize = ExchangeInformation.tickSize
+        self.stepSize = ExchangeInformation.stepSize
         self.buyPrice = 0
         self.sellPrice = 0
 
