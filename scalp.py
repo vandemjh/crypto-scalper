@@ -27,18 +27,16 @@ Util.printExchangeInformation()
 
 try:
     print(Colors.info("Press Ctrl+C to stop"))
-    strategy = Strategy(
-        totalQuantity=Client.getAssetBalance(ExchangeInformation.quoteAsset)
+    totalQuantity = Client.getAssetBalance(ExchangeInformation.quoteAsset) * (
+        IN_PLAY_PERCENT / 100
     )
+    strategy = Strategy(totalQuantity=totalQuantity)
     strategy.execute()
 
 except Exception as e:
     print(Colors.warn("\nInterrupted!"))
-
     print(Colors.warn("\nStack trace:"))
     print(e)
     traceback.print_exc()
-    pass
-finally:
-    Client.stopSocket()
     Util.cancelAllOrders(SYMBOL)
+    Client.stopSocket()

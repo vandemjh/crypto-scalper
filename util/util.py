@@ -16,7 +16,7 @@ from util.client import Client
 class Util:
     @staticmethod
     def cancelAllOrders(symbol=SYMBOL):
-        time.sleep(3) # Wait for orders to be accepted
+        time.sleep(1) # Wait for orders to be accepted
         openOrders = Client.getOpenOrders(symbol)
         if len(openOrders) != 0:
             print("Canceling open orders for " + Colors.info(SYMBOL) + ":")
@@ -38,7 +38,7 @@ class Util:
     def printExchangeInformation() -> None:
         print(Colors.info("Available balance is: " + str(ExchangeInformation.balance)))
         print(Colors.info("Scalping: " + str(SCALP_PERCENT) + "%"))
-        print(Colors.info("Executing : " + str(NUMBER_OF_TRADES) + " trades at a time"))
+        print(Colors.info("Executing: " + str(NUMBER_OF_TRADES) + " trades at a time"))
 
         print(
             Colors.warn("Exchange information")
