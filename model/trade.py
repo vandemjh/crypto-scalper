@@ -80,6 +80,7 @@ class Trade:
         while not order:  # Order cancelled or not filled
             self.setValues()
             self.initBuy()
+            self.buyOrder.place()  # Place new order
             order = self.buyOrder.waitForOrder()
         return {}.update(order=order)
 
@@ -89,9 +90,9 @@ class Trade:
         return {}.update(order=self.sellOrder.waitForOrder())
 
     def execute(self) -> dict:
-        toReturn = (
-            {}.update(buy=self.placeAndAwaitBuy()).update(sell=self.placeAndAwaitSell())
-        )
+        toReturn: dict = {}
+        toReturn.update(buy=self.placeAndAwaitBuy())
+        toReturn.update(sell=self.placeAndAwaitSell())
         Util.writeOrder(toReturn)
         return toReturn
 

@@ -24,7 +24,7 @@ class Order:
         cancelThreshold: float or None = None,
         cancelled: bool = False,
     ) -> None:
-        self.orderId: int = ""
+        self.orderId: int = 0
         self.clientOrderId: str = ""
         self.filled: bool = False
 
@@ -68,6 +68,7 @@ class Order:
             + str(self.quantity)
             + Colors.sell("(" + str(ExchangeInformation.baseAsset) + ") ")
             + phrases.thresholdPricedOrNot(self.cancelThreshold)
+            + Util.getPercentDiff(self.cancelThreshold)
             + "."
         )
 
@@ -106,11 +107,9 @@ class Order:
         getOrder = None
         while getOrder == None:
             try:
-                getOrder = Client.binanceClient.get_order(
-                    symbol=self.symbol, orderId=self.orderId
-                )
+                getOrder = Client.getOrder(orderId=self.orderId)
             except BinanceAPIException:
-                time.sleep(1)
+                time.sleep(1)  # Wait for order to be accepted by exchange
                 count = count + 1
                 if count > retryTimes:
                     raise
@@ -145,7 +144,7 @@ class Order:
                     quantity=self.quantity,
                     price=self.price,
                 )
-                self.orderId = result["orderId"]
+                self.orderId = int(result["orderId"])
                 self.clientOrderId = result["clientOrderId"]
                 return result
         elif self.side == SIDE_SELL:
@@ -156,7 +155,7 @@ class Order:
                     quantity=self.quantity,
                     price=self.price,
                 )
-                self.orderId = result["orderId"]
+                self.orderId = int(result["orderId"])
                 self.clientOrderId = result["clientOrderId"]
                 return result
         return None
@@ -171,4 +170,4 @@ class Order:
         """
         self.cancelled = True
         self.printStatus()
-        return Client.cancelOrder(self.symbol, self.orderId)
+        return Client.cancelOrder(self.orderId)

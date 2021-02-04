@@ -16,7 +16,7 @@ from util.client import Client
 class Util:
     @staticmethod
     def cancelAllOrders(symbol=SYMBOL):
-        time.sleep(1) # Wait for orders to be accepted
+        time.sleep(1)  # Wait for orders to be accepted
         openOrders = Client.getOpenOrders(symbol)
         if len(openOrders) != 0:
             print("Canceling open orders for " + Colors.info(SYMBOL) + ":")
@@ -24,7 +24,7 @@ class Util:
             print("No open orders")
         for order in openOrders:
             print(order["orderId"])
-            Client.cancelOrder(order["symbol"], order["orderId"])
+            Client.cancelOrder(int(order["orderId"]))
 
     @staticmethod
     def writeOrder(
@@ -65,12 +65,13 @@ class Util:
         )
 
     def getPercentDiff(statedPrice: float) -> str:
+        diffPrice: float = Client.latestPrice
         return (
             Colors.sell(
-                "↓" + str(round(((Client.latestPrice / statedPrice) - 1) * 100, 2))
+                "↓" + str(round(((diffPrice / statedPrice) - 1) * 100, 2)) + "%"
             )
-            if statedPrice < Client.latestPrice
+            if statedPrice < diffPrice
             else Colors.buy(
-                "↑" + str(round((Client.latestPrice / statedPrice) * 100, 2))
+                "↑" + str(round(((diffPrice / statedPrice) - 1) * -100, 2)) + "%"
             )
         )

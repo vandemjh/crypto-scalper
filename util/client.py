@@ -1,5 +1,7 @@
 import sys
 import json
+import time
+from binance.exceptions import BinanceAPIException
 
 from twisted.internet import reactor
 from settings import SYMBOL
@@ -99,11 +101,20 @@ class Client:
         reactor.stop()
 
     @staticmethod
-    def cancelOrder(symbol: str, orderId: str) -> dict:
+    def cancelOrder(orderId: int, symbol: str = SYMBOL) -> dict:
         """
         Cancel an order
         """
-        return Client.binanceClient.cancel_order(symbol=symbol, orderId=orderId)
+        try:
+            return Client.binanceClient.cancel_order(symbol=symbol, orderId=orderId)
+        except BinanceAPIException:
+            print(
+                Colors.fail(
+                    "Order #" + str(orderId) + " cancel failed: " + str(orderId)
+                )
+            )
+            time.sleep(1)  # Wait for order to be accepted
+            return Client.binanceClient.cancel_order(symbol=symbol, orderId=orderId)
 
     @staticmethod
     def getAssetBalance(asset: str) -> float:
@@ -122,8 +133,8 @@ class Client:
         return Client.binanceClient.get_exchange_info()
 
     @staticmethod
-    def getOrder(orderId: str, symbol=SYMBOL) -> dict:
-        return Client.binanceClient.get_order(symbol=symbol, orderId=orderId)
+    def getOrder(orderId: int, symbol=SYMBOL) -> dict:
+        return Client.binanceClient.get_order(symbol=symbol, orderId=str(orderId))
 
     @staticmethod
     def orderLimitBuy(quantity: float, price: float, symbol=SYMBOL):
