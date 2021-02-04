@@ -74,8 +74,8 @@ class Trade:
         self.initSell()
 
     def placeAndAwaitBuy(self) -> dict:
-        self.buyOrder.place()
         time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for order to be accepted by exchange
+        self.buyOrder.place()
         order = self.buyOrder.waitForOrder()
         while not order:  # Order cancelled or not filled
             self.setValues()
@@ -88,8 +88,8 @@ class Trade:
         return {}.update(order=order)
 
     def placeAndAwaitSell(self) -> dict:
-        self.sellOrder.place()
         time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for order to be accepted by exchange
+        self.sellOrder.place()
         return {}.update(order=self.sellOrder.waitForOrder())
 
     def execute(self) -> dict:
