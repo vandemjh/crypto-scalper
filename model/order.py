@@ -1,3 +1,4 @@
+from util.util import Util
 from model.exchange import ExchangeInformation
 from typing import Callable
 from util.client import Client
@@ -62,6 +63,7 @@ class Order:
             + "@ "
             + str(self.price)
             + Colors.buy("(" + str(ExchangeInformation.quoteAsset) + ")")
+            + Util.getPercentDiff(self.price)
             + " totaling "
             + str(self.quantity)
             + Colors.sell("(" + str(ExchangeInformation.baseAsset) + ") ")

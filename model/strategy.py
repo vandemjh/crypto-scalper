@@ -2,6 +2,7 @@ from util.colors import Colors
 from model.trade import Trade
 from threading import Thread
 from settings import NUMBER_OF_TRADES, SCALP_PERCENT
+from typing import List
 
 
 class Strategy:
@@ -15,19 +16,13 @@ class Strategy:
         count = 1
         for i in range(numberOfTrades):
             tempScalp = SCALP_PERCENT * count
-            print(
-                Colors.info(
-                    "Init trade #"
-                    + str(i)
-                    + " scalping: "
-                    + str(tempScalp)
-                    + " totaling: "
-                    + str(tradeQuantity)
-                )
-            )
             self.trades.append(Trade(spreadPercent=tempScalp, quantity=tradeQuantity))
             count = count + 1
 
-    def execute(self):
+    def execute(self) -> List[Thread]:
+        threads: List[Thread] = []
         for trade in self.trades:
-            Thread(target=trade.executeForever()).start()
+            t = Thread(target=trade.executeForever)
+            threads.append(t)
+            t.start()
+        return threads

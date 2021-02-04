@@ -34,7 +34,6 @@ try:
 
 except Exception as e:
     print(Colors.warn("\nInterrupted!"))
-    Util.cancelAllOrders(SYMBOL)
 
     print(Colors.warn("\nStack trace:"))
     print(e)
@@ -42,3 +41,4 @@ except Exception as e:
     pass
 finally:
     Client.stopSocket()
+    Util.cancelAllOrders(SYMBOL)

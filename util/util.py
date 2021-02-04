@@ -1,13 +1,22 @@
 import json
+import time
+
 from util.colors import Colors
 from model.exchange import ExchangeInformation
-from settings import IN_PLAY_PERCENT, NUMBER_OF_TRADES, ORDER_HISTORY, OUTPUT_FILE, SCALP_PERCENT, SYMBOL
+from settings import (
+    NUMBER_OF_TRADES,
+    ORDER_HISTORY,
+    OUTPUT_FILE,
+    SCALP_PERCENT,
+    SYMBOL,
+)
 from util.client import Client
 
 
 class Util:
     @staticmethod
     def cancelAllOrders(symbol=SYMBOL):
+        time.sleep(3) # Wait for orders to be accepted
         openOrders = Client.getOpenOrders(symbol)
         if len(openOrders) != 0:
             print("Canceling open orders for " + Colors.info(SYMBOL) + ":")
@@ -53,4 +62,15 @@ class Util:
             + str(ExchangeInformation.tickSize)
             + Colors.info("\n\tStep size: ")
             + str(ExchangeInformation.stepSize)
+        )
+
+    def getPercentDiff(statedPrice: float) -> str:
+        return (
+            Colors.sell(
+                "↓" + str(round(((Client.latestPrice / statedPrice) - 1) * 100, 2))
+            )
+            if statedPrice < Client.latestPrice
+            else Colors.buy(
+                "↑" + str(round((Client.latestPrice / statedPrice) * 100, 2))
+            )
         )
