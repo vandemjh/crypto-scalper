@@ -1,10 +1,10 @@
-from threading import Thread
 import time
 from util.client import Client
+from util.util import Util
 from binance.enums import SIDE_BUY, SIDE_SELL
-from settings import SCALP_PERCENT, SYMBOL
-from model import ExchangeInformation
-from model import Order
+from settings import SYMBOL
+from model.exchange import ExchangeInformation
+from model.order import Order
 
 
 class Trade:
@@ -12,11 +12,11 @@ class Trade:
     A trade is a set of one buy and one sell order
     """
 
-    def findBestPrice() -> float:
+    def findBestPrice(self) -> float:
         return (
-            Order.getAveragePrice(SYMBOL)
-            if Order.getAveragePrice(SYMBOL) < Order.getLatestOrderPrice(SYMBOL)
-            else Order.getLatestOrderPrice(SYMBOL)
+            Client.getAveragePrice(SYMBOL)
+            if Client.getAveragePrice(SYMBOL) < Client.getLatestOrderPrice(SYMBOL)
+            else Client.getLatestOrderPrice(SYMBOL)
         )
 
     def setValues(self):
@@ -27,26 +27,26 @@ class Trade:
 
     def setBuyValues(self, averagePrice: float):
         self.buyPrice = averagePrice - (averagePrice * (self.spreadPercent) / 100)
-        self.buyQuantity = Client.getAssetBalance(self.quoteAsset) / self.buyPrice
+        self.buyQuantity = self.quantity / self.buyPrice
         self.buyCancelThreshold: float = averagePrice + (
-            averagePrice * (SCALP_PERCENT / 100)
+            averagePrice * (self.spreadPercent / 100)
         )
 
     def setSellValues(self, averagePrice: float):
         self.sellPrice = averagePrice + (averagePrice * (self.spreadPercent) / 100)
-        self.sellQuantity = Order.getAssetBalance(self.baseAsset)
+        self.sellQuantity = self.buyQuantity
         self.sellCancelThreshold = None  # Unused right now
 
-    def initBuy(self, basePrecision, quotePrecision, tickSize, stepSize):
+    def initBuy(self):
         self.buyOrder: Order = Order(
             symbol=SYMBOL,
             side=SIDE_BUY,
             price=self.buyPrice,
             quantity=self.buyQuantity,
-            basePrecision=self.basePrecision,
-            quotePrecision=self.quotePrecision,
-            tickSize=self.tickSize,
-            stepSize=self.stepSize,
+            baseAssetPrecision=ExchangeInformation.baseAssetPrecision,
+            quoteAssetPrecision=ExchangeInformation.quoteAssetPrecision,
+            tickSize=ExchangeInformation.tickSize,
+            stepSize=ExchangeInformation.stepSize,
             cancelThreshold=self.buyCancelThreshold,
         )
 
@@ -56,25 +56,20 @@ class Trade:
             side=SIDE_SELL,
             price=self.sellPrice,
             quantity=self.sellQuantity,
-            basePrecision=self.basePrecision,
-            quotePrecision=self.quotePrecision,
-            tickSize=self.tickSize,
-            stepSize=self.stepSize,
+            baseAssetPrecision=ExchangeInformation.baseAssetPrecision,
+            quoteAssetPrecision=ExchangeInformation.quoteAssetPrecision,
+            tickSize=ExchangeInformation.tickSize,
+            stepSize=ExchangeInformation.stepSize,
             cancelThreshold=self.sellCancelThreshold,
         )
 
-    def ___init___(self):
-        self.baseAsset = ExchangeInformation.baseAsset
-        self.spreadPercent = SCALP_PERCENT / 2
-        self.quoteAsset = ExchangeInformation.quoteAsset
-        self.basePrecision = ExchangeInformation.basePrecision
-        self.quotePrecision = ExchangeInformation.quotePrecision
-        self.tickSize = ExchangeInformation.tickSize
-        self.stepSize = ExchangeInformation.stepSize
+    def __init__(self, spreadPercent: float = 0, quantity: float = 0):
+        self.spreadPercent = spreadPercent
+        self.quantity = quantity
         self.buyPrice = 0
         self.sellPrice = 0
 
-        self.setValues(self.findBestPrice())
+        self.setValues()
         self.initBuy()
         self.initSell()
 
@@ -93,7 +88,13 @@ class Trade:
         time.sleep(1)  # Wait for order to be accepted by exchange
         return {}.update(order=self.sellOrder.waitForOrder())
 
-    async def execute(self) -> dict:
-        return (
+    def execute(self) -> dict:
+        toReturn = (
             {}.update(buy=self.placeAndAwaitBuy()).update(sell=self.placeAndAwaitSell())
         )
+        Util.writeOrder(toReturn)
+        return toReturn
+
+    def executeForever(self) -> None:
+        while True:
+            self.execute()

@@ -24,7 +24,10 @@ class Colors:
 
     def fail(input: str) -> str:
         return Colors.FAIL + input + Colors.END
-
+    def buy(input: str) -> str:
+        return Colors.BUY + input + Colors.END
+    def sell(input: str) -> str:
+        return Colors.SELL + input + Colors.END
 
 class phrases:
     PLACED = Colors.PLACED + "PLACED " + Colors.END

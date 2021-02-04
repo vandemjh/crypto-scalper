@@ -61,10 +61,10 @@ class Order:
             + phrases.buyOrSell(self.side)
             + "@ "
             + str(self.price)
-            + Colors.buy("(" + str(ExchangeInformation.baseAsset) + ") ")
+            + Colors.buy("(" + str(ExchangeInformation.quoteAsset) + ")")
             + " totaling "
             + str(self.quantity)
-            + Colors.sell("(" + str(ExchangeInformation.quoteAsset) + ") ")
+            + Colors.sell("(" + str(ExchangeInformation.baseAsset) + ") ")
             + phrases.thresholdPricedOrNot(self.cancelThreshold)
             + "."
         )

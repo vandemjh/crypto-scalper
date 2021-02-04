@@ -1,6 +1,7 @@
-from os import times
-from util import writeOrder
-from model import Trade
+from util.colors import Colors
+from model.trade import Trade
+from threading import Thread
+from settings import NUMBER_OF_TRADES, SCALP_PERCENT
 
 
 class Strategy:
@@ -8,12 +9,25 @@ class Strategy:
     A strategy is an execution of a series of trades.
     """
 
-    def ___init___(self):
-        pass
+    def __init__(self, numberOfTrades=NUMBER_OF_TRADES, totalQuantity: float = 0):
+        self.trades: list[Trade] = []
+        tradeQuantity: float = totalQuantity / numberOfTrades
+        count = 1
+        for i in range(numberOfTrades):
+            tempScalp = SCALP_PERCENT * count
+            print(
+                Colors.info(
+                    "Init trade #"
+                    + str(i)
+                    + " scalping: "
+                    + str(tempScalp)
+                    + " totaling: "
+                    + str(tradeQuantity)
+                )
+            )
+            self.trades.append(Trade(spreadPercent=tempScalp, quantity=tradeQuantity))
+            count = count + 1
 
-    async def execute(self):
-        while True:
-            trade = Trade()
-            await trade.execute()
-            writeOrder(trade)
-            times.sleep(10)  # Avoid placing buy order right after
+    def execute(self):
+        for trade in self.trades:
+            Thread(target=trade.executeForever()).start()

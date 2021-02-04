@@ -13,8 +13,7 @@ class ExchangeInformation:
     stepSize: float = None
     balance: float = None
 
-    @staticmethod
-    def init():
+    def __init__(self):
         exchangeInfo: dict = Client.getExchangeInformation()
         symbols = exchangeInfo["symbols"]
         filters: list = []
@@ -30,7 +29,6 @@ class ExchangeInformation:
                 ExchangeInformation.minPrice = float(filter["minPrice"])
                 ExchangeInformation.maxPrice = float(filter["maxPrice"])
                 ExchangeInformation.tickSize = float(filter["tickSize"])
-                print(ExchangeInformation.tickSize)
             if filter["filterType"] == "LOT_SIZE":
                 ExchangeInformation.stepSize = float(filter["stepSize"])
 
