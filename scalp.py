@@ -5,7 +5,7 @@ import asyncio
 import datetime
 import traceback
 from settings import *
-from trade import Trade
+from model import Trade
 from util.util import Util
 from binance.enums import *
 from dotenv import load_dotenv
@@ -17,9 +17,6 @@ from model.exchange import ExchangeInformation
 OUTPUT_FILE = (
     OUTPUT_FILE + str(datetime.datetime.now().strftime("%Y%m%d-%H%M%S")) + ".json"
 )
-
-ORDER_HISTORY = []
-
 
 def init() -> None:
     load_dotenv()

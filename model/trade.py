@@ -4,7 +4,7 @@ from util.client import Client
 from binance.enums import SIDE_BUY, SIDE_SELL
 from settings import SCALP_PERCENT, SYMBOL
 from typing import Callable, List
-from order import Order
+from model import Order
 
 
 class Trade:

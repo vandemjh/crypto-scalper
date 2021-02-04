@@ -1,7 +1,7 @@
 import json
 from util.colors import Colors
 from model.exchange import ExchangeInformation
-from settings import IN_PLAY_PERCENT, SCALP_PERCENT, SYMBOL
+from settings import IN_PLAY_PERCENT, ORDER_HISTORY, OUTPUT_FILE, SCALP_PERCENT, SYMBOL
 from util.client import Client
 
 
@@ -18,7 +18,7 @@ class Util:
             Client.cancelOrder(order["symbol"], order["orderId"])
 
     @staticmethod
-    def writeOrder(orderHistory: dict, outputFile: str, order: dict) -> None:
+    def writeOrder(order: dict, orderHistory: dict = ORDER_HISTORY, outputFile: str = OUTPUT_FILE) -> None:
         orderHistory.append(order)
         with open(outputFile, "w+") as f:
             f.write(json.dumps(orderHistory))
