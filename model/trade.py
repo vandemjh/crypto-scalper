@@ -85,12 +85,16 @@ class Trade:
                 SLEEP_MULTIPLIER * 1
             )  # Wait for order to be accepted by exchange
             order = self.buyOrder.waitForOrder()
-        return {}.update(order=order)
+        toReturn: dict = {}
+        toReturn.update(order=order)
+        return toReturn
 
     def placeAndAwaitSell(self) -> dict:
         time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for order to be accepted by exchange
         self.sellOrder.place()
-        return {}.update(order=self.sellOrder.waitForOrder())
+        toReturn: dict = {}
+        toReturn.update(order=self.sellOrder.waitForOrder())
+        return toReturn
 
     def execute(self) -> dict:
         toReturn: dict = {}

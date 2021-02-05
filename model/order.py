@@ -142,24 +142,45 @@ class Order:
             if DEBUG:
                 pass
             else:
-                result = Client.orderLimitBuy(
-                    quantity=self.quantity,
-                    price=self.price,
-                )
-                self.orderId = int(result["orderId"])
-                self.clientOrderId = result["clientOrderId"]
-                return result
+                try:
+                    result = Client.orderLimitBuy(
+                        quantity=self.quantity,
+                        price=self.price,
+                    )
+                    self.orderId = int(result["orderId"])
+                    self.clientOrderId = result["clientOrderId"]
+                    return result
+                except BinanceAPIException:
+                    print(Colors.warn("Error selling, trying again"))
+                    result = Client.orderLimitBuy(
+                        quantity=self.quantity,
+                        price=self.price,
+                    )
+                    self.orderId = int(result["orderId"])
+                    self.clientOrderId = result["clientOrderId"]
+                    return result
         elif self.side == SIDE_SELL:
             if DEBUG:
                 pass
             else:
-                result = Client.orderLimitSell(
-                    quantity=self.quantity,
-                    price=self.price,
-                )
-                self.orderId = int(result["orderId"])
-                self.clientOrderId = result["clientOrderId"]
-                return result
+                try:
+                    result = Client.orderLimitSell(
+                        quantity=self.quantity,
+                        price=self.price,
+                    )
+                    self.orderId = int(result["orderId"])
+                    self.clientOrderId = result["clientOrderId"]
+                    return result
+                except BinanceAPIException:
+                    print(Colors.warn("Error selling, trying again"))
+                    time.sleep(SLEEP_MULTIPLIER * 1)  # Last order likely not completed
+                    result = Client.orderLimitSell(
+                        quantity=self.quantity,
+                        price=self.price,
+                    )
+                    self.orderId = int(result["orderId"])
+                    self.clientOrderId = result["clientOrderId"]
+                    return result
         return None
 
     def printStatus(self) -> None:
