@@ -5,6 +5,7 @@ from binance.enums import SIDE_BUY, SIDE_SELL
 from settings import SLEEP_MULTIPLIER, SYMBOL
 from model.exchange import ExchangeInformation
 from model.order import Order
+from binance.exceptions import BinanceAPIException
 
 
 class Trade:
@@ -105,4 +106,8 @@ class Trade:
 
     def executeForever(self) -> None:
         while True:
-            self.execute()
+            try:
+                self.execute()
+            except BinanceAPIException:  # Connection reset, establish new connection
+                Util.initClient()
+                continue

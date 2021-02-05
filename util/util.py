@@ -1,5 +1,7 @@
 import json
 import time
+import os
+from dotenv import load_dotenv
 
 from util.colors import Colors
 from model.exchange import ExchangeInformation
@@ -65,6 +67,7 @@ class Util:
             + str(ExchangeInformation.stepSize)
         )
 
+    @staticmethod
     def getPercentDiff(statedPrice: float) -> str:
         diffPrice: float = Client.latestPrice
         if not statedPrice:
@@ -78,3 +81,12 @@ class Util:
                 "↑" + str(round(((diffPrice / statedPrice) - 1) * -100, 2)) + "%"
             )
         )
+
+    @staticmethod
+    def initClient():
+        load_dotenv()
+        api_key = os.getenv("KEY")
+        api_secret = os.getenv("SECRET")
+        Client(apiKey=api_key, apiSecret=api_secret, tld="us")
+        api_key = api_secret = None
+        

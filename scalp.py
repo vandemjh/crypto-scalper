@@ -1,10 +1,8 @@
-import os
 import datetime
 import traceback
 from settings import *
 from util.util import Util
 from binance.enums import *
-from dotenv import load_dotenv
 from util.colors import Colors
 from util.client import Client
 from model.strategy import Strategy
@@ -17,11 +15,7 @@ OUTPUT_FILE = (
 SCALP_PERCENT = SCALP_PERCENT / 2
 
 
-load_dotenv()
-api_key = os.getenv("KEY")
-api_secret = os.getenv("SECRET")
-Client(apiKey=api_key, apiSecret=api_secret, tld="us")
-api_key = api_secret = None
+Util.initClient()
 ExchangeInformation()
 Util.printExchangeInformation()
 
