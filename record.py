@@ -11,7 +11,7 @@ from util.client import Client
 load_dotenv()
 api_key = os.getenv("KEY")
 api_secret = os.getenv("SECRET")
-Client.init(api_key, api_secret, tld="us")
+Client(api_key, api_secret, tld="us")
 api_key = api_secret = None
 
 ORDER_HISTORY = []
