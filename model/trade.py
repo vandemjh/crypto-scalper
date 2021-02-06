@@ -109,5 +109,6 @@ class Trade:
             try:
                 self.execute()
             except BinanceAPIException:  # Connection reset, establish new connection
+                time.sleep(SLEEP_MULTIPLIER * 2)
                 Util.initClient()
                 continue

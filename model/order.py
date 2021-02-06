@@ -151,7 +151,8 @@ class Order:
                     self.clientOrderId = result["clientOrderId"]
                     return result
                 except BinanceAPIException:
-                    print(Colors.warn("Error selling, trying again"))
+                    time.sleep(SLEEP_MULTIPLIER * 2)
+                    print(Colors.warn("Error placing buy, trying again"))
                     result = Client.orderLimitBuy(
                         quantity=self.quantity,
                         price=self.price,
@@ -172,7 +173,8 @@ class Order:
                     self.clientOrderId = result["clientOrderId"]
                     return result
                 except BinanceAPIException:
-                    print(Colors.warn("Error selling, trying again"))
+                    time.sleep(SLEEP_MULTIPLIER * 2)
+                    print(Colors.warn("Error placing sell, trying again"))
                     time.sleep(SLEEP_MULTIPLIER * 1)  # Last order likely not completed
                     result = Client.orderLimitSell(
                         quantity=self.quantity,
