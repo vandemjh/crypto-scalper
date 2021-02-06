@@ -26,15 +26,15 @@ class Trade:
         if self.buyPrice >= self.sellPrice:
             raise Exception("Buy price higher than sell")
 
-    def setBuyValues(self, averagePrice: float):
-        self.buyPrice = averagePrice - (averagePrice * (self.spreadPercent) / 100)
+    def setBuyValues(self, bestPrice: float):
+        self.buyPrice = bestPrice - (bestPrice * (self.spreadPercent) / 100)
         self.buyQuantity = self.quantity / self.buyPrice
-        self.buyCancelThreshold: float = averagePrice + (
-            averagePrice * (self.spreadPercent / 100)
+        self.buyCancelThreshold: float = bestPrice + (
+            bestPrice * (self.spreadPercent / 100)
         )
 
-    def setSellValues(self, averagePrice: float):
-        self.sellPrice = averagePrice + (averagePrice * (self.spreadPercent) / 100)
+    def setSellValues(self, bestPrice: float):
+        self.sellPrice = bestPrice + (bestPrice * (self.spreadPercent) / 100)
         self.sellQuantity = self.buyQuantity
         self.sellCancelThreshold = None  # Unused right now
 
@@ -75,8 +75,8 @@ class Trade:
         self.initSell()
 
     def placeAndAwaitBuy(self) -> dict:
-        time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for order to be accepted by exchange
         self.buyOrder.place()
+        time.sleep(SLEEP_MULTIPLIER * 1)  # Wait for order to be accepted by exchange
         order = self.buyOrder.waitForOrder()
         while not order:  # Order cancelled or not filled
             self.setValues()
@@ -108,7 +108,10 @@ class Trade:
         while True:
             try:
                 self.execute()
-            except BinanceAPIException:  # Connection reset, establish new connection
+            except BinanceAPIException as e:
                 time.sleep(SLEEP_MULTIPLIER * 2)
-                Util.initClient()
-                continue
+                if e.status_code == 1006:  # Connection reset, establish new connection
+                    Util.initClient()
+                    continue
+                else:
+                    raise
